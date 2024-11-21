@@ -10,10 +10,10 @@ jobs:
       - name: Connect to ssh, pull and systemctl restart
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ secrets.HOST }}
-          username: ${{ secrets.USERNAME }}
+          host: hackclub.app
+          username: amber
           key: ${{ secrets.KEY }}
-          port: ${{ secrets.PORT }}
+          port: 22
           script: |
             : # Load nix binaries
             export PATH=/home/amber/.nix-profile/bin:$PATH
