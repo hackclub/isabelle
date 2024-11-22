@@ -48,6 +48,22 @@ def get_create_event_modal(user_id: str):
             },
             {
                 "type": "input",
+                "block_id": "location",
+                "element": {"type": "plain_text_input", "action_id": "location"},
+                "label": {"type": "plain_text", "text": "Event Location (URL)", "emoji": True},
+                "optional": True,
+            },
+            {
+                "type": "context",
+                "elements": [
+                    {
+                        "type": "mrkdwn",
+                        "text": "_Defaults to #high-seas-bulletin channel link if not provided._",
+                    }
+                ],
+            },
+            {
+                "type": "input",
                 "block_id": "host",
                 "element": {
                     "type": "users_select",

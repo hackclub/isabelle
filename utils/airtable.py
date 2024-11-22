@@ -15,6 +15,7 @@ class AirtableManager:
         description: str,
         start_time: str,
         end_time: str,
+        location: str,
         host_id: str,
         host_name: str,
         host_pfp: str,
@@ -27,6 +28,7 @@ class AirtableManager:
                     start_time, timezone.utc
                 ).isoformat(),
                 "End Time": datetime.fromtimestamp(end_time, timezone.utc).isoformat(),
+                "Event Link": location,
                 "Leader Slack ID": host_id,
                 "Leader": host_name,
                 "Avatar": [{"url": host_pfp}],

@@ -16,13 +16,14 @@ def handle_create_event_view(ack: Callable, body: dict[str, Any], client: WebCli
     start_time = (values["start_time"]["start_time"]["selected_date_time"],)
     end_time = (values["end_time"]["end_time"]["selected_date_time"],)
     host_id = values["host"]["host"]["selected_user"]
-
+    location = values.get("location", {}).get("location", {}).get("value") or "https://hackclub.slack.com/archives/C07TNAZGMHS"
+    
     user = client.users_info(user=host_id)
     host_name = user["user"]["real_name"]
     host_pfp = user["user"]["profile"]["image_192"]
 
     event = env.airtable.create_event(
-        title[0], md, start_time[0], end_time[0], host_id, host_name, host_pfp
+        title[0], md, start_time[0], end_time[0], location, host_id, host_name, host_pfp
     )
     if not event:
         client.chat_postEphemeral(
