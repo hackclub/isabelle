@@ -34,7 +34,7 @@ def approve_event(ack: Callable, body: dict[str, Any], client: WebClient):
 @app.event("app_home_opened")
 def update_home_tab(client: WebClient, event: dict[str, Any]):
     user_id = event["user"]
-    home_tab = get_home(user_id)
+    home_tab = get_home(user_id, client)
     client.views_publish(user_id=user_id, view=home_tab)
 
 

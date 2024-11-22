@@ -1,14 +1,17 @@
 from datetime import datetime, timezone
+from slack_sdk import WebClient
 
 from utils.env import env
 from utils.utils import user_in_safehouse, md_to_mrkdwn
 
 
-def get_home(user_id: str):
+def get_home(user_id: str, client: WebClient):
     sad_member = user_in_safehouse(user_id)
-    admin = True if user_id in env.authorised_users else False
+    user_info = client.users_info(user=user_id)
+    ws_admin = True if user_info["user"]["is_admin"] or user_info["user"]["is_owner"] or user_info["user"]["is_primary_owner"] else False
+    admin = True if user_id in env.authorised_users or ws_admin else False
     events = env.airtable.get_all_events(
-        unapproved=True if admin or sad_member else False
+        unapproved=True
     )
     upcoming_events = [
         event
@@ -16,8 +19,79 @@ def get_home(user_id: str):
         if datetime.fromisoformat(event["fields"]["Start Time"])
         > datetime.now(timezone.utc)
     ]
+    current_events = [
+        event for event in events if datetime.now(timezone.utc) < datetime.fromisoformat(event["fields"]["End Time"]) and datetime.now(timezone.utc) > datetime.fromisoformat(event["fields"]["Start Time"])
+    ]
+
+    current_events_blocks = []
+    for event in current_events:
+        if not event["fields"].get("Approved", False) or not event["fields"].get("Leader Slack ID", "") == user_id or not sad_member or not admin:
+            continue
+        current_events_blocks.append({"type": "divider"})
+        fallback_time = datetime.fromisoformat(event["fields"]["End Time"]).strftime(
+            "Ends at %I:%M %p"
+        )
+        formatted_time = f"<!date^{int(datetime.fromisoformat(event['fields']['End Time']).timestamp())}^Ends at {{time}}|{fallback_time}>"
+        mrkdwn = md_to_mrkdwn(event["fields"]["Description"])
+        current_events_blocks.append(
+            {
+                "type": "section",
+                "text": {
+                    "type": "mrkdwn",
+                    "text": f"{'*[UNAPPROVED]:* ' if not event['fields'].get('Approved', False) else ''}*{event['fields']['Title']}* - <@{event['fields']['Leader Slack ID']}>\n{mrkdwn}\n*{formatted_time}*",
+                },
+                "accessory": {
+                    "type": "image",
+                    "image_url": event["fields"]["Avatar"][0]["url"],
+                    "alt_text": f"{event['fields']['Leader']} profile picture",
+                },
+            }
+        )
+        buttons = []
+        if admin and not event["fields"].get("Approved", False):
+            buttons.append(
+                {
+                    "type": "button",
+                    "text": {"type": "plain_text", "text": "Approve", "emoji": True},
+                    "style": "primary",
+                    "value": event["id"],
+                    "action_id": "approve-event",
+                }
+            )
+        buttons.append(
+            {
+                "type": "button",
+                "text": {"type": "plain_text", "text": "Join!", "emoji": True},
+                "value": "join",
+                "style": "primary",
+                "url": event["fields"].get("Event Link", "https://hackclub.slack.com/archives/C07TNAZGMHS"), # Default to #high-seas-bulletin
+            }
+        )
+        if user_id == event["fields"]["Leader Slack ID"] or admin:
+            buttons.append(
+                {
+                    "type": "button",
+                    "text": {"type": "plain_text", "text": "Edit", "emoji": True},
+                    "value": "edit-event",
+                    "action_id": "edit-event",
+                }
+            )
+        if event["fields"].get("Approved", False):
+            buttons.append(
+                {
+                    "type": "button",
+                    "text": {"type": "plain_text", "text": "More Info", "emoji": True},
+                    "value": "more-info",
+                    "action_id": "more-info",
+                }
+            )
+        current_events_blocks.append({"type": "actions", "elements": [*buttons]})
+    
+
     upcoming_events_blocks = []
     for event in upcoming_events:
+        if not event["fields"].get("Approved", False) or not event["fields"].get("Leader Slack ID", "") == user_id or not sad_member or not admin:
+            continue
         upcoming_events_blocks.append({"type": "divider"})
         fallback_time = datetime.fromisoformat(event["fields"]["Start Time"]).strftime(
             "%A, %B %d at %I:%M %p"
@@ -90,18 +164,7 @@ def get_home(user_id: str):
             )
         upcoming_events_blocks.append({"type": "actions", "elements": [*buttons]})
 
-    return {
-        "type": "home",
-        "blocks": [
-            {
-                "type": "header",
-                "text": {
-                    "type": "plain_text",
-                    "text": "Upcoming Events",
-                    "emoji": True,
-                },
-            },
-            {
+    create_event_btn =[ {
                 "type": "actions",
                 "elements": [
                     {
@@ -115,6 +178,41 @@ def get_home(user_id: str):
                         "action_id": "create-event" if sad_member else "propose-event",
                     }
                 ],
+            }]
+    
+    current_events_combined = [
+        {
+            "type": "header",
+            "text": {
+                "type": "plain_text",
+                "text": "Current Events" if len(current_events_blocks) > 1 else "Current Event",
+                "emoji": True,
+            },
+        },
+        *current_events_blocks,
+    ] if len(current_events_blocks) > 0 else []
+
+    return {
+        "type": "home",
+        "blocks": [
+            {
+                "type": "header",
+                "text": {
+                    "type": "plain_text",
+                    "text": f":ac-isabelle-cheer: Hi {user_info['user']['profile']['display_name'] or user_info['user']['profile']['real_name']}!",
+                    "emoji": True,
+                },
+            },
+            *current_events_combined,
+            {"type": "divider"},
+            *create_event_btn,
+            {
+                "type": "header",
+                "text": {
+                    "type": "plain_text",
+                    "text": "Upcoming Events" if len(upcoming_events_blocks) > 1 else "Upcoming Event" if len(upcoming_events_blocks) == 1 else "No Upcoming Events",
+                    "emoji": True,
+                },
             },
             *upcoming_events_blocks,
             {"type": "divider"},
