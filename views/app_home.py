@@ -25,7 +25,7 @@ def get_home(user_id: str, client: WebClient):
 
     current_events_blocks = []
     for event in current_events:
-        if not event["fields"].get("Approved", False) or not event["fields"].get("Leader Slack ID", "") == user_id or not sad_member or not admin:
+        if not event["fields"].get("Approved", False) and (not event["fields"].get("Leader Slack ID", "") == user_id and not sad_member and not admin):
             continue
         current_events_blocks.append({"type": "divider"})
         fallback_time = datetime.fromisoformat(event["fields"]["End Time"]).strftime(
@@ -90,7 +90,8 @@ def get_home(user_id: str, client: WebClient):
 
     upcoming_events_blocks = []
     for event in upcoming_events:
-        if not event["fields"].get("Approved", False) or not event["fields"].get("Leader Slack ID", "") == user_id or not sad_member or not admin:
+        if not event["fields"].get("Approved", False) and (not event["fields"].get("Leader Slack ID", "") == user_id and not sad_member and not admin):
+            print(event['fields']['Title'])
             continue
         upcoming_events_blocks.append({"type": "divider"})
         fallback_time = datetime.fromisoformat(event["fields"]["Start Time"]).strftime(
@@ -191,7 +192,18 @@ def get_home(user_id: str, client: WebClient):
         },
         *current_events_blocks,
     ] if len(current_events_blocks) > 0 else []
-
+    
+    upcoming_events_combined = [
+        {
+            "type": "header",
+            "text": {
+                "type": "plain_text",
+                "text": "Upcoming Events" if len(upcoming_events_blocks) > 1 else "Upcoming Event",
+                "emoji": True,
+            },
+        },
+        *upcoming_events_blocks,
+    ] if len(upcoming_events_blocks) > 0 else []
     return {
         "type": "home",
         "blocks": [
@@ -206,15 +218,6 @@ def get_home(user_id: str, client: WebClient):
             *current_events_combined,
             {"type": "divider"},
             *create_event_btn,
-            {
-                "type": "header",
-                "text": {
-                    "type": "plain_text",
-                    "text": "Upcoming Events" if len(upcoming_events_blocks) > 1 else "Upcoming Event" if len(upcoming_events_blocks) == 1 else "No Upcoming Events",
-                    "emoji": True,
-                },
-            },
-            *upcoming_events_blocks,
-            {"type": "divider"},
+            *upcoming_events_combined
         ],
     }
