@@ -16,7 +16,7 @@ def send_reminder(
     if email:
         email_addr = client.users_info(user=user_id)["user"]["profile"]["email"]
         env.mailer.send_email(
-            email_addr, f"{event["fields"]["Title"]} Reminder!", message
+            email_addr, f"{event['fields']['Title']} Reminder!", message
         )
 
 
