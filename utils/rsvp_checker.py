@@ -54,7 +54,7 @@ def check_rsvps():
             env.airtable.update_event(event["id"], **{"Sent 1 Hour Reminder": True})
 
         elif start_time - time.time() <= 0 and not event["fields"].get(
-            "Sent Started Reminder", False
+            "Sent Starting Reminder", False
         ):
             for user in rsvps:
                 send_reminder(
