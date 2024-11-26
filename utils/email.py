@@ -49,7 +49,9 @@ class Email:
         try:
             with self.server as server:
                 server.connect(self.smtp_server, self.port)
+                server.ehlo()
                 server.login(self.sender, self.password)
+                server.ehlo()
                 server.send_message(msg)
             print("Email successfully sent")
             return True
