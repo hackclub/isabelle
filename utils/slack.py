@@ -7,6 +7,7 @@ from events.commands.create_event import handle_create_event_cmd
 from events.views.create_event import handle_create_event_view
 from events.buttons.propose_event import handle_propose_event_btn
 from events.buttons.approve_event import handle_approve_event_btn
+from events.buttons.rsvp import handle_rsvp_btn
 from views.app_home import get_home
 
 from typing import Any, Callable
@@ -51,3 +52,8 @@ def create_event(ack: Callable, body: dict[str, Any], client: WebClient):
 @app.action("add-to-gcal")
 def add_to_gcal(ack: Callable):
     ack()
+
+
+@app.action("rsvp")
+def rsvp(ack: Callable, body: dict[str, Any], client: WebClient):
+    handle_rsvp_btn(ack, body, client)

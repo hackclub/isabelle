@@ -50,7 +50,11 @@ def get_create_event_modal(user_id: str):
                 "type": "input",
                 "block_id": "location",
                 "element": {"type": "plain_text_input", "action_id": "location"},
-                "label": {"type": "plain_text", "text": "Event Location (URL)", "emoji": True},
+                "label": {
+                    "type": "plain_text",
+                    "text": "Event Location (URL)",
+                    "emoji": True,
+                },
                 "optional": True,
             },
             {

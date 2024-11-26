@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 
 from utils.env import env
 from utils.utils import rich_text_to_md, md_to_mrkdwn
+from views.app_home import get_home
 
 
 def handle_create_event_view(ack: Callable, body: dict[str, Any], client: WebClient):
@@ -16,8 +17,11 @@ def handle_create_event_view(ack: Callable, body: dict[str, Any], client: WebCli
     start_time = (values["start_time"]["start_time"]["selected_date_time"],)
     end_time = (values["end_time"]["end_time"]["selected_date_time"],)
     host_id = values["host"]["host"]["selected_user"]
-    location = values.get("location", {}).get("location", {}).get("value") or "https://hackclub.slack.com/archives/C07TNAZGMHS"
-    
+    location = (
+        values.get("location", {}).get("location", {}).get("value")
+        or "https://hackclub.slack.com/archives/C07TNAZGMHS"
+    )
+
     user = client.users_info(user=host_id)
     host_name = user["user"]["real_name"]
     host_pfp = user["user"]["profile"]["image_192"]
@@ -54,3 +58,5 @@ def handle_create_event_view(ack: Callable, body: dict[str, Any], client: WebCli
             }
         ],
     )
+
+    client.views_publish(user_id=user_id, view=get_home(user_id, client))

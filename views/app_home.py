@@ -8,11 +8,17 @@ from utils.utils import user_in_safehouse, md_to_mrkdwn
 def get_home(user_id: str, client: WebClient):
     sad_member = user_in_safehouse(user_id)
     user_info = client.users_info(user=user_id)
-    ws_admin = True if user_info["user"]["is_admin"] or user_info["user"]["is_owner"] or user_info["user"]["is_primary_owner"] else False
-    admin = True if user_id in env.authorised_users or ws_admin else False
-    events = env.airtable.get_all_events(
-        unapproved=True
+    ws_admin = (
+        True
+        if user_info["user"]["is_admin"]
+        or user_info["user"]["is_owner"]
+        or user_info["user"]["is_primary_owner"]
+        else False
     )
+    admin = True if user_id in env.authorised_users or ws_admin else False
+    airtable_user = env.airtable.get_user(user_id)
+
+    events = env.airtable.get_all_events(unapproved=True)
     upcoming_events = [
         event
         for event in events
@@ -20,12 +26,21 @@ def get_home(user_id: str, client: WebClient):
         > datetime.now(timezone.utc)
     ]
     current_events = [
-        event for event in events if datetime.now(timezone.utc) < datetime.fromisoformat(event["fields"]["End Time"]) and datetime.now(timezone.utc) > datetime.fromisoformat(event["fields"]["Start Time"])
+        event
+        for event in events
+        if datetime.now(timezone.utc)
+        < datetime.fromisoformat(event["fields"]["End Time"])
+        and datetime.now(timezone.utc)
+        > datetime.fromisoformat(event["fields"]["Start Time"])
     ]
 
     current_events_blocks = []
     for event in current_events:
-        if not event["fields"].get("Approved", False) and (not event["fields"].get("Leader Slack ID", "") == user_id and not sad_member and not admin):
+        if not event["fields"].get("Approved", False) and (
+            not event["fields"].get("Leader Slack ID", "") == user_id
+            and not sad_member
+            and not admin
+        ):
             continue
         current_events_blocks.append({"type": "divider"})
         fallback_time = datetime.fromisoformat(event["fields"]["End Time"]).strftime(
@@ -64,7 +79,9 @@ def get_home(user_id: str, client: WebClient):
                 "text": {"type": "plain_text", "text": "Join!", "emoji": True},
                 "value": "join",
                 "style": "primary",
-                "url": event["fields"].get("Event Link", "https://hackclub.slack.com/archives/C07TNAZGMHS"), # Default to #high-seas-bulletin
+                "url": event["fields"].get(
+                    "Event Link", "https://hackclub.slack.com/archives/C07TNAZGMHS"
+                ),  # Default to #high-seas-bulletin
             }
         )
         if user_id == event["fields"]["Leader Slack ID"] or admin:
@@ -86,12 +103,14 @@ def get_home(user_id: str, client: WebClient):
                 }
             )
         current_events_blocks.append({"type": "actions", "elements": [*buttons]})
-    
 
     upcoming_events_blocks = []
     for event in upcoming_events:
-        if not event["fields"].get("Approved", False) and (not event["fields"].get("Leader Slack ID", "") == user_id and not sad_member and not admin):
-            print(event['fields']['Title'])
+        if not event["fields"].get("Approved", False) and (
+            not event["fields"].get("Leader Slack ID", "") == user_id
+            and not sad_member
+            and not admin
+        ):
             continue
         upcoming_events_blocks.append({"type": "divider"})
         fallback_time = datetime.fromisoformat(event["fields"]["Start Time"]).strftime(
@@ -134,12 +153,26 @@ def get_home(user_id: str, client: WebClient):
                 }
             )
         if not user_id == event["fields"]["Leader Slack ID"]:
+            text = (
+                ":bell: Interested"
+                if airtable_user["id"]
+                not in event["fields"].get("Interested Users", [])
+                else ":white_check_mark: Going"
+            )
+            style_dict = (
+                {"style": "primary"}
+                if airtable_user["id"]
+                not in event["fields"].get("Interested Users", [])
+                else {}
+            )
+
             buttons.append(
                 {
                     "type": "button",
-                    "text": {"type": "plain_text", "text": "RSVP", "emoji": True},
-                    "value": "rsvp",
+                    "text": {"type": "plain_text", "text": text, "emoji": True},
+                    "value": event["id"],
                     "action_id": "rsvp",
+                    **style_dict,
                 }
             )
         if event["fields"].get("Approved", False):
@@ -165,45 +198,63 @@ def get_home(user_id: str, client: WebClient):
             )
         upcoming_events_blocks.append({"type": "actions", "elements": [*buttons]})
 
-    create_event_btn =[ {
-                "type": "actions",
-                "elements": [
-                    {
-                        "type": "button",
-                        "text": {
-                            "type": "plain_text",
-                            "text": "Add Event" if sad_member else "Propose Event",
-                            "emoji": True,
-                        },
-                        "value": "host-event",
-                        "action_id": "create-event" if sad_member else "propose-event",
-                    }
-                ],
-            }]
-    
-    current_events_combined = [
+    create_event_btn = [
         {
-            "type": "header",
-            "text": {
-                "type": "plain_text",
-                "text": "Current Events" if len(current_events_blocks) > 1 else "Current Event",
-                "emoji": True,
+            "type": "actions",
+            "elements": [
+                {
+                    "type": "button",
+                    "text": {
+                        "type": "plain_text",
+                        "text": "Add Event" if sad_member else "Propose Event",
+                        "emoji": True,
+                    },
+                    "value": "host-event",
+                    "action_id": "create-event" if sad_member else "propose-event",
+                }
+            ],
+        }
+    ]
+
+    current_events_combined = (
+        [
+            {
+                "type": "header",
+                "text": {
+                    "type": "plain_text",
+                    "text": (
+                        "Current Events"
+                        if len(current_events_blocks) > 1
+                        else "Current Event"
+                    ),
+                    "emoji": True,
+                },
             },
-        },
-        *current_events_blocks,
-    ] if len(current_events_blocks) > 0 else []
-    
-    upcoming_events_combined = [
-        {
-            "type": "header",
-            "text": {
-                "type": "plain_text",
-                "text": "Upcoming Events" if len(upcoming_events_blocks) > 1 else "Upcoming Event",
-                "emoji": True,
+            *current_events_blocks,
+        ]
+        if len(current_events_blocks) > 0
+        else []
+    )
+
+    upcoming_events_combined = (
+        [
+            {
+                "type": "header",
+                "text": {
+                    "type": "plain_text",
+                    "text": (
+                        "Upcoming Events"
+                        if len(upcoming_events_blocks) > 1
+                        else "Upcoming Event"
+                    ),
+                    "emoji": True,
+                },
             },
-        },
-        *upcoming_events_blocks,
-    ] if len(upcoming_events_blocks) > 0 else []
+            *upcoming_events_blocks,
+        ]
+        if len(upcoming_events_blocks) > 0
+        else []
+    )
     return {
         "type": "home",
         "blocks": [
@@ -218,6 +269,6 @@ def get_home(user_id: str, client: WebClient):
             *current_events_combined,
             {"type": "divider"},
             *create_event_btn,
-            *upcoming_events_combined
+            *upcoming_events_combined,
         ],
     }

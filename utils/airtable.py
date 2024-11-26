@@ -66,3 +66,40 @@ class AirtableManager:
     ):
         event = self.events_table.update(id, updates)
         return event
+
+    def create_user(self, slack_id: str):
+        user = self.users_table.create(
+            {
+                "Slack ID": slack_id,
+            }
+        )
+        return user
+
+    def get_user(self, slack_id: str):
+        user = self.users_table.first(formula=f"{{Slack ID}} = '{slack_id}'")
+        if not user:
+            user = self.create_user(slack_id)
+        return user
+
+    def update_user(self, slack_id: str, **updates: dict):
+        user = self.users_table.update(slack_id, updates)
+        return user
+
+    def get_rsvps_from_event(self, event_id: str):
+        rsvps = self.users_table.all()
+        rsvps = [
+            rsvp
+            for rsvp in rsvps
+            if event_id in rsvp["fields"].get("Interesting Events", [])
+        ]
+        return rsvps
+
+    def rsvp_to_event(self, event_id: str, slack_id: str):
+        user = self.get_user(slack_id)
+        events = user["fields"].get("Interesting Events", [])
+        if event_id in events:
+            events.remove(event_id)
+        else:
+            events.append(event_id)
+        user = self.update_user(user["id"], **{"Interesting Events": events})
+        return user

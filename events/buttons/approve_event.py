@@ -46,4 +46,4 @@ def handle_approve_event_btn(ack: Callable, body: dict[str, Any], client: WebCli
         text=f"<@{user_id}> approved {event['fields']['Title']} for <@{event['fields']['Leader Slack ID']}>.",
     )
 
-    client.views_publish(user_id=user_id, view=get_home(user_id))
+    client.views_publish(user_id=user_id, view=get_home(user_id, client))
