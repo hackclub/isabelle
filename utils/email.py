@@ -22,6 +22,8 @@ class Email:
         port: int = 465,
     ):
         """Connect to SMTP server and set self variables"""
+        self.smtp_server = server
+        self.port = port
         self.sender = sender
         self.server = smtplib.SMTP_SSL(server, port)
         self.password = password
@@ -46,6 +48,7 @@ class Email:
         msg["To"] = recipient
         try:
             with self.server as server:
+                server.connect(self.smtp_server, self.port)
                 server.login(self.sender, self.password)
                 server.send_message(msg)
             print("Email successfully sent")
