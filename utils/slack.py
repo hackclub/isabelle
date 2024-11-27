@@ -3,8 +3,10 @@ from slack_sdk import WebClient
 
 from .env import env
 from events.buttons.create_event import handle_create_event_btn
+from events.buttons.edit_event import handle_edit_event_btn
 from events.commands.create_event import handle_create_event_cmd
 from events.views.create_event import handle_create_event_view
+from events.views.edit_event import handle_edit_event_view
 from events.buttons.propose_event import handle_propose_event_btn
 from events.buttons.approve_event import handle_approve_event_btn
 from events.buttons.rsvp import handle_rsvp_btn
@@ -26,6 +28,10 @@ def create_event(ack: Callable, body: dict[str, Any], client: WebClient):
 def create_event_view(ack: Callable, body: dict[str, Any], client: WebClient):
     handle_create_event_view(ack, body, client)
 
+@app.view("edit_event")
+def edit_event_view(ack: Callable, body: dict[str, Any], client: WebClient):
+    handle_edit_event_view(ack, body, client)
+
 
 @app.action("approve-event")
 def approve_event(ack: Callable, body: dict[str, Any], client: WebClient):
@@ -42,6 +48,11 @@ def update_home_tab(client: WebClient, event: dict[str, Any]):
 @app.action("create-event")
 def create_event(ack: Callable, body: dict[str, Any], client: WebClient):
     handle_create_event_btn(ack, body, client)
+
+
+@app.action("edit-event")
+def edit_event(ack: Callable, body: dict[str, Any], client: WebClient):
+    handle_edit_event_btn(ack, body, client)
 
 
 @app.action("propose-event")

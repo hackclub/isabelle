@@ -1,6 +1,6 @@
 from pyairtable import Api
 from datetime import datetime, timezone
-
+import json
 
 class AirtableManager:
     def __init__(self, api_key: str, base_id: str):
@@ -12,7 +12,8 @@ class AirtableManager:
     def create_event(
         self,
         title: str,
-        description: str,
+        md_description: str,
+        raw_description: list,
         start_time: str,
         end_time: str,
         location: str,
@@ -20,10 +21,15 @@ class AirtableManager:
         host_name: str,
         host_pfp: str,
     ):
+        raw_description_string = json.dumps({
+            "type": "rich_text",
+            "elements": raw_description,
+        })
         event = self.events_table.create(
             {
                 "Title": title,
-                "Description": description,
+                "Description": md_description,
+                "Raw Description": raw_description_string,
                 "Start Time": datetime.fromtimestamp(
                     start_time, timezone.utc
                 ).isoformat(),

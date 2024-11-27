@@ -6,8 +6,10 @@ from utils.env import env
 from utils.utils import rich_text_to_md, md_to_mrkdwn
 from views.app_home import get_home
 
+import json
 
-def handle_create_event_view(ack: Callable, body: dict[str, Any], client: WebClient):
+
+def handle_edit_event_view(ack: Callable, body: dict[str, Any], client: WebClient):
     ack()
     view = body["view"]
     values = view["state"]["values"]
@@ -26,8 +28,24 @@ def handle_create_event_view(ack: Callable, body: dict[str, Any], client: WebCli
     host_name = user["user"]["real_name"]
     host_pfp = user["user"]["profile"]["image_192"]
 
-    event = env.airtable.create_event(
-        title[0], md, description, start_time[0], end_time[0], location, host_id, host_name, host_pfp
+    raw_description_string = json.dumps({
+        "type": "rich_text",
+        "elements": description,
+    })
+
+    event = env.airtable.update_event(
+        id=body["view"]["private_metadata"],
+        **{
+            "Title": title[0],
+            "Description": md,
+            "Raw Description": raw_description_string,
+            "Start Time": datetime.fromtimestamp(start_time[0], timezone.utc).isoformat(),
+            "End Time": datetime.fromtimestamp(end_time[0], timezone.utc).isoformat(),
+            "Event Link": location,
+            "Leader Slack ID": host_id,
+            "Leader": host_name,
+            "Avatar": [{"url": host_pfp}],
+        }
     )
     if not event:
         client.chat_postEphemeral(

@@ -1,11 +1,14 @@
 from utils.env import env
-
+from datetime import datetime
+import json
 
 def get_edit_event_modal(event_id: str):
     event = env.airtable.get_event(event_id)
+    raw_desc = json.loads(event["fields"]["Raw Description"])
     return {
         "type": "modal",
-        "callback_id": "create_event",
+        "callback_id": "edit_event",
+        "private_metadata": event_id,
         "title": {"type": "plain_text", "text": "Add Event", "emoji": True},
         "submit": {"type": "plain_text", "text": "Submit", "emoji": True},
         "close": {"type": "plain_text", "text": "Cancel", "emoji": True},
@@ -21,9 +24,12 @@ def get_edit_event_modal(event_id: str):
             {
                 "type": "input",
                 "block_id": "title",
-                "element": {"type": "plain_text_input", "action_id": "title"},
+                "element": {
+                    "type": "plain_text_input",
+                    "action_id": "title",
+                    "initial_value": event["fields"]["Title"]
+                },
                 "label": {"type": "plain_text", "text": "Title", "emoji": True},
-                "initial_value": event["fields"]["Name"],
             },
             {
                 "type": "input",
@@ -31,28 +37,29 @@ def get_edit_event_modal(event_id: str):
                 "element": {
                     "type": "rich_text_input",
                     "action_id": "description",
-                    "dispatch_action_config": {
-                        "trigger_actions_on": ["on_character_entered"]
-                    },
-                    "focus_on_load": False,
-                    "placeholder": {"type": "plain_text", "text": "Enter text"},
+                    "initial_value": raw_desc,
                 },
                 "label": {"type": "plain_text", "text": "Description", "emoji": True},
-                "initial_value": event["fields"]["Description"],
             },
             {
                 "type": "input",
                 "block_id": "start_time",
-                "element": {"type": "datetimepicker", "action_id": "start_time"},
+                "element": {
+                    "type": "datetimepicker",
+                    "action_id": "start_time",
+                    "initial_date_time": datetime.fromisoformat(event["fields"]["Start Time"]).timestamp(),
+                },
                 "label": {"type": "plain_text", "text": "Start Time", "emoji": True},
-                "initial_date": event["fields"]["Start Time"],
             },
             {
                 "type": "input",
                 "block_id": "end_time",
-                "element": {"type": "datetimepicker", "action_id": "end_time"},
+                "element": {
+                    "type": "datetimepicker",
+                    "action_id": "end_time",
+                    "initial_date_time": datetime.fromisoformat(event["fields"]["End Time"]).timestamp()
+                },
                 "label": {"type": "plain_text", "text": "End Time", "emoji": True},
-                "initial_date": event["fields"]["End Time"],
             },
             {
                 "type": "input",
