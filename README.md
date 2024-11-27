@@ -1,5 +1,7 @@
 # Isabelle
 
+![Isabelle](https://cloud-9cjmg0akv-hack-club-bot.vercel.app/0image.png)
+
 Isabelle is a Slack bot for discovering events in the Hack Club Slack. It provides an easy way for SAD members to add events to the Hack Club [events website](https://events.hackclub.com) and for Hack Clubbers to find events and show interest in events.
 
 ## Features
