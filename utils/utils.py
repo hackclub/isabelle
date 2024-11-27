@@ -63,46 +63,167 @@ def md_to_rich_text(md):
     rich_text = []
 
     # Convert code blocks
-    code_block_pattern = re.compile(r'```(.*?)```', re.DOTALL)
-    md = code_block_pattern.sub(lambda m: rich_text.append({"type": "rich_text_preformatted", "elements": [{"type": "text", "text": m.group(1)}]}) or "", md)
+    code_block_pattern = re.compile(r"```(.*?)```", re.DOTALL)
+    md = code_block_pattern.sub(
+        lambda m: rich_text.append(
+            {
+                "type": "rich_text_preformatted",
+                "elements": [{"type": "text", "text": m.group(1)}],
+            }
+        )
+        or "",
+        md,
+    )
 
     # Convert blockquotes
-    blockquote_pattern = re.compile(r'^> (.*)', re.MULTILINE)
-    md = blockquote_pattern.sub(lambda m: rich_text.append({"type": "rich_text_quote", "elements": [{"type": "text", "text": m.group(1)}]}) or "", md)
+    blockquote_pattern = re.compile(r"^> (.*)", re.MULTILINE)
+    md = blockquote_pattern.sub(
+        lambda m: rich_text.append(
+            {
+                "type": "rich_text_quote",
+                "elements": [{"type": "text", "text": m.group(1)}],
+            }
+        )
+        or "",
+        md,
+    )
 
     # Convert unordered lists
-    unordered_list_pattern = re.compile(r'^\s*-\s+(.*)', re.MULTILINE)
-    md = unordered_list_pattern.sub(lambda m: rich_text.append({"type": "rich_text_list", "style": "bullet", "elements": [{"type": "rich_text_section", "elements": [{"type": "text", "text": m.group(1)}]}]}) or "", md)
+    unordered_list_pattern = re.compile(r"^\s*-\s+(.*)", re.MULTILINE)
+    md = unordered_list_pattern.sub(
+        lambda m: rich_text.append(
+            {
+                "type": "rich_text_list",
+                "style": "bullet",
+                "elements": [
+                    {
+                        "type": "rich_text_section",
+                        "elements": [{"type": "text", "text": m.group(1)}],
+                    }
+                ],
+            }
+        )
+        or "",
+        md,
+    )
 
     # Convert ordered lists
-    ordered_list_pattern = re.compile(r'^\s*\d+\.\s+(.*)', re.MULTILINE)
-    md = ordered_list_pattern.sub(lambda m: rich_text.append({"type": "rich_text_list", "style": "numbered", "elements": [{"type": "rich_text_section", "elements": [{"type": "text", "text": m.group(1)}]}]}) or "", md)
+    ordered_list_pattern = re.compile(r"^\s*\d+\.\s+(.*)", re.MULTILINE)
+    md = ordered_list_pattern.sub(
+        lambda m: rich_text.append(
+            {
+                "type": "rich_text_list",
+                "style": "numbered",
+                "elements": [
+                    {
+                        "type": "rich_text_section",
+                        "elements": [{"type": "text", "text": m.group(1)}],
+                    }
+                ],
+            }
+        )
+        or "",
+        md,
+    )
 
     # Convert inline code
-    inline_code_pattern = re.compile(r'`(.*?)`')
-    md = inline_code_pattern.sub(lambda m: rich_text.append({"type": "rich_text_section", "elements": [{"type": "text", "text": m.group(1), "style": {"code": True}}]}) or "", md)
+    inline_code_pattern = re.compile(r"`(.*?)`")
+    md = inline_code_pattern.sub(
+        lambda m: rich_text.append(
+            {
+                "type": "rich_text_section",
+                "elements": [
+                    {"type": "text", "text": m.group(1), "style": {"code": True}}
+                ],
+            }
+        )
+        or "",
+        md,
+    )
 
     # Convert bold and italic text
-    bold_italic_pattern = re.compile(r'\*\*\*(.*?)\*\*\*')
-    md = bold_italic_pattern.sub(lambda m: rich_text.append({"type": "rich_text_section", "elements": [{"type": "text", "text": m.group(1), "style": {"bold": True, "italic": True}}]}) or "", md)
+    bold_italic_pattern = re.compile(r"\*\*\*(.*?)\*\*\*")
+    md = bold_italic_pattern.sub(
+        lambda m: rich_text.append(
+            {
+                "type": "rich_text_section",
+                "elements": [
+                    {
+                        "type": "text",
+                        "text": m.group(1),
+                        "style": {"bold": True, "italic": True},
+                    }
+                ],
+            }
+        )
+        or "",
+        md,
+    )
 
-    bold_pattern = re.compile(r'\*\*(.*?)\*\*')
-    md = bold_pattern.sub(lambda m: rich_text.append({"type": "rich_text_section", "elements": [{"type": "text", "text": m.group(1), "style": {"bold": True}}]}) or "", md)
+    bold_pattern = re.compile(r"\*\*(.*?)\*\*")
+    md = bold_pattern.sub(
+        lambda m: rich_text.append(
+            {
+                "type": "rich_text_section",
+                "elements": [
+                    {"type": "text", "text": m.group(1), "style": {"bold": True}}
+                ],
+            }
+        )
+        or "",
+        md,
+    )
 
-    italic_pattern = re.compile(r'\*(.*?)\*')
-    md = italic_pattern.sub(lambda m: rich_text.append({"type": "rich_text_section", "elements": [{"type": "text", "text": m.group(1), "style": {"italic": True}}]}) or "", md)
+    italic_pattern = re.compile(r"\*(.*?)\*")
+    md = italic_pattern.sub(
+        lambda m: rich_text.append(
+            {
+                "type": "rich_text_section",
+                "elements": [
+                    {"type": "text", "text": m.group(1), "style": {"italic": True}}
+                ],
+            }
+        )
+        or "",
+        md,
+    )
 
     # Convert strikethrough text
-    strikethrough_pattern = re.compile(r'~~(.*?)~~')
-    md = strikethrough_pattern.sub(lambda m: rich_text.append({"type": "rich_text_section", "elements": [{"type": "text", "text": m.group(1), "style": {"strike": True}}]}) or "", md)
+    strikethrough_pattern = re.compile(r"~~(.*?)~~")
+    md = strikethrough_pattern.sub(
+        lambda m: rich_text.append(
+            {
+                "type": "rich_text_section",
+                "elements": [
+                    {"type": "text", "text": m.group(1), "style": {"strike": True}}
+                ],
+            }
+        )
+        or "",
+        md,
+    )
 
     # Convert links
-    link_pattern = re.compile(r'\[(.*?)\]\((.*?)\)')
-    md = link_pattern.sub(lambda m: rich_text.append({"type": "rich_text_section", "elements": [{"type": "link", "url": m.group(2), "text": m.group(1)}]}) or "", md)
+    link_pattern = re.compile(r"\[(.*?)\]\((.*?)\)")
+    md = link_pattern.sub(
+        lambda m: rich_text.append(
+            {
+                "type": "rich_text_section",
+                "elements": [{"type": "link", "url": m.group(2), "text": m.group(1)}],
+            }
+        )
+        or "",
+        md,
+    )
 
     # Convert plain text
     if md.strip():
-        rich_text.append({"type": "rich_text_section", "elements": [{"type": "text", "text": md.strip()}]})
+        rich_text.append(
+            {
+                "type": "rich_text_section",
+                "elements": [{"type": "text", "text": md.strip()}],
+            }
+        )
 
     return rich_text
 

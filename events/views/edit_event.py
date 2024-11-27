@@ -28,10 +28,12 @@ def handle_edit_event_view(ack: Callable, body: dict[str, Any], client: WebClien
     host_name = user["user"]["real_name"]
     host_pfp = user["user"]["profile"]["image_192"]
 
-    raw_description_string = json.dumps({
-        "type": "rich_text",
-        "elements": description,
-    })
+    raw_description_string = json.dumps(
+        {
+            "type": "rich_text",
+            "elements": description,
+        }
+    )
 
     event = env.airtable.update_event(
         id=body["view"]["private_metadata"],
@@ -39,13 +41,15 @@ def handle_edit_event_view(ack: Callable, body: dict[str, Any], client: WebClien
             "Title": title[0],
             "Description": md,
             "Raw Description": raw_description_string,
-            "Start Time": datetime.fromtimestamp(start_time[0], timezone.utc).isoformat(),
+            "Start Time": datetime.fromtimestamp(
+                start_time[0], timezone.utc
+            ).isoformat(),
             "End Time": datetime.fromtimestamp(end_time[0], timezone.utc).isoformat(),
             "Event Link": location,
             "Leader Slack ID": host_id,
             "Leader": host_name,
             "Avatar": [{"url": host_pfp}],
-        }
+        },
     )
     if not event:
         client.chat_postEphemeral(

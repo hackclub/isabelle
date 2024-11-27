@@ -89,7 +89,7 @@ def get_home(user_id: str, client: WebClient):
                 {
                     "type": "button",
                     "text": {"type": "plain_text", "text": "Edit", "emoji": True},
-                    "value": event['id'],
+                    "value": event["id"],
                     "action_id": "edit-event",
                 }
             )
@@ -148,7 +148,7 @@ def get_home(user_id: str, client: WebClient):
                 {
                     "type": "button",
                     "text": {"type": "plain_text", "text": "Edit", "emoji": True},
-                    "value": event['id'],
+                    "value": event["id"],
                     "action_id": "edit-event",
                 }
             )

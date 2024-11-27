@@ -2,6 +2,7 @@ from utils.env import env
 from datetime import datetime
 import json
 
+
 def get_edit_event_modal(event_id: str):
     event = env.airtable.get_event(event_id)
     raw_desc = json.loads(event["fields"]["Raw Description"])
@@ -27,7 +28,7 @@ def get_edit_event_modal(event_id: str):
                 "element": {
                     "type": "plain_text_input",
                     "action_id": "title",
-                    "initial_value": event["fields"]["Title"]
+                    "initial_value": event["fields"]["Title"],
                 },
                 "label": {"type": "plain_text", "text": "Title", "emoji": True},
             },
@@ -47,7 +48,9 @@ def get_edit_event_modal(event_id: str):
                 "element": {
                     "type": "datetimepicker",
                     "action_id": "start_time",
-                    "initial_date_time": datetime.fromisoformat(event["fields"]["Start Time"]).timestamp(),
+                    "initial_date_time": datetime.fromisoformat(
+                        event["fields"]["Start Time"]
+                    ).timestamp(),
                 },
                 "label": {"type": "plain_text", "text": "Start Time", "emoji": True},
             },
@@ -57,7 +60,9 @@ def get_edit_event_modal(event_id: str):
                 "element": {
                     "type": "datetimepicker",
                     "action_id": "end_time",
-                    "initial_date_time": datetime.fromisoformat(event["fields"]["End Time"]).timestamp()
+                    "initial_date_time": datetime.fromisoformat(
+                        event["fields"]["End Time"]
+                    ).timestamp(),
                 },
                 "label": {"type": "plain_text", "text": "End Time", "emoji": True},
             },

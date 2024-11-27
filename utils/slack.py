@@ -28,6 +28,7 @@ def create_event(ack: Callable, body: dict[str, Any], client: WebClient):
 def create_event_view(ack: Callable, body: dict[str, Any], client: WebClient):
     handle_create_event_view(ack, body, client)
 
+
 @app.view("edit_event")
 def edit_event_view(ack: Callable, body: dict[str, Any], client: WebClient):
     handle_edit_event_view(ack, body, client)

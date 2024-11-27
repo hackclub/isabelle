@@ -2,6 +2,7 @@ from pyairtable import Api
 from datetime import datetime, timezone
 import json
 
+
 class AirtableManager:
     def __init__(self, api_key: str, base_id: str):
         api = Api(api_key)
@@ -21,10 +22,12 @@ class AirtableManager:
         host_name: str,
         host_pfp: str,
     ):
-        raw_description_string = json.dumps({
-            "type": "rich_text",
-            "elements": raw_description,
-        })
+        raw_description_string = json.dumps(
+            {
+                "type": "rich_text",
+                "elements": raw_description,
+            }
+        )
         event = self.events_table.create(
             {
                 "Title": title,
