@@ -93,15 +93,15 @@ def get_home(user_id: str, client: WebClient):
                     "action_id": "edit-event",
                 }
             )
-        if event["fields"].get("Approved", False):
-            buttons.append(
-                {
-                    "type": "button",
-                    "text": {"type": "plain_text", "text": "More Info", "emoji": True},
-                    "value": "more-info",
-                    "action_id": "more-info",
-                }
-            )
+        # if event["fields"].get("Approved", False):
+        #     buttons.append(
+        #         {
+        #             "type": "button",
+        #             "text": {"type": "plain_text", "text": "More Info", "emoji": True},
+        #             "value": "more-info",
+        #             "action_id": "more-info",
+        #         }
+        #     )
         current_events_blocks.append({"type": "actions", "elements": [*buttons]})
 
     upcoming_events_blocks = []
@@ -176,14 +176,14 @@ def get_home(user_id: str, client: WebClient):
                 }
             )
         if event["fields"].get("Approved", False):
-            buttons.append(
-                {
-                    "type": "button",
-                    "text": {"type": "plain_text", "text": "More Info", "emoji": True},
-                    "value": "more-info",
-                    "action_id": "more-info",
-                }
-            )
+            # buttons.append(
+            #     {
+            #         "type": "button",
+            #         "text": {"type": "plain_text", "text": "More Info", "emoji": True},
+            #         "value": "more-info",
+            #         "action_id": "more-info",
+            #     }
+            # )
             buttons.append(
                 {
                     "type": "button",
