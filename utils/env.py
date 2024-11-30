@@ -16,6 +16,8 @@ class Environment:
         self.airtable_base_id = os.environ.get("AIRTABLE_BASE_ID")
         google_username = os.environ.get("GOOGLE_USERNAME")
         google_password = os.environ.get("GOOGLE_PASSWORD")
+        self.sentry_dsn = os.environ.get("SENTRY_DSN")
+        self.environemnt = os.environ.get("ENVIRONMENT", "development")
 
         self.port = int(os.environ.get("PORT", 3000))
 
@@ -35,6 +37,8 @@ class Environment:
             raise Exception("GOOGLE_USERNAME is not set")
         if not google_password:
             raise Exception("GOOGLE_PASSWORD is not set")
+        if not self.sentry_dsn and self.environemnt:
+            raise Exception("SENTRY_DSN is not set")
 
         self.airtable = AirtableManager(
             api_key=self.airtable_api_key, base_id=self.airtable_base_id
@@ -46,7 +50,7 @@ class Environment:
             "U054VC2KM9P",  # Amber
             "U0409FSKU82",  # Arpan
             "U01MPHKFZ7S",  # Aarya
-            "UDK5M9Y13",  # Chris
+            "UDK5M9Y13",    # Chris
             "U06QST7V0J2",  # Eesha
         ]
 
