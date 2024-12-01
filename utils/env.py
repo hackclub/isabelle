@@ -37,11 +37,11 @@ class Environment:
             raise Exception("GOOGLE_USERNAME is not set")
         if not google_password:
             raise Exception("GOOGLE_PASSWORD is not set")
-        if not self.sentry_dsn and self.environemnt:
+        if not self.sentry_dsn and self.environemnt == "production":
             raise Exception("SENTRY_DSN is not set")
 
         self.airtable = AirtableManager(
-            api_key=self.airtable_api_key, base_id=self.airtable_base_id
+            api_key=self.airtable_api_key, base_id=self.airtable_base_id, production=self.environemnt == "production"
         )
 
         self.mailer = Email(sender=google_username, password=google_password)
