@@ -6,6 +6,7 @@ from events.buttons.create_event import handle_create_event_btn
 from events.buttons.edit_event import handle_edit_event_btn
 from events.commands.create_event import handle_create_event_cmd
 from events.views.create_event import handle_create_event_view
+from events.views.reject_event import handle_reject_event_view
 from events.views.edit_event import handle_edit_event_view
 from events.buttons.propose_event import handle_propose_event_btn
 from events.buttons.approve_event import handle_approve_event_btn
@@ -33,6 +34,11 @@ def create_event_view(ack: Callable, body: dict[str, Any], client: WebClient):
 @app.view("edit_event")
 def edit_event_view(ack: Callable, body: dict[str, Any], client: WebClient):
     handle_edit_event_view(ack, body, client)
+
+
+@app.view("reject_event")
+def reject_event_view(ack: Callable, body: dict[str, Any], client: WebClient):
+    handle_reject_event_view(ack, body, client)
 
 
 @app.action("approve-event")
