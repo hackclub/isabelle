@@ -9,6 +9,7 @@ from events.views.create_event import handle_create_event_view
 from events.views.edit_event import handle_edit_event_view
 from events.buttons.propose_event import handle_propose_event_btn
 from events.buttons.approve_event import handle_approve_event_btn
+from events.buttons.reject_event import handle_reject_event_btn
 from events.buttons.rsvp import handle_rsvp_btn
 from views.app_home import get_home
 
@@ -37,6 +38,11 @@ def edit_event_view(ack: Callable, body: dict[str, Any], client: WebClient):
 @app.action("approve-event")
 def approve_event(ack: Callable, body: dict[str, Any], client: WebClient):
     handle_approve_event_btn(ack, body, client)
+
+
+@app.action("reject-event")
+def reject_event(ack: Callable, body: dict[str, Any], client: WebClient):
+    handle_reject_event_btn(ack, body, client)
 
 
 @app.event("app_home_opened")

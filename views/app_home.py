@@ -75,6 +75,15 @@ def get_home(user_id: str, client: WebClient):
                     "action_id": "approve-event",
                 }
             )
+            buttons.append(
+                {
+                    "type": "button",
+                    "text": {"type": "plain_text", "text": "Reject", "emoji": True},
+                    "style": "danger",
+                    "value": event["id"],
+                    "action_id": "reject-event",
+                }
+            )
         buttons.append(
             {
                 "type": "button",
@@ -144,6 +153,15 @@ def get_home(user_id: str, client: WebClient):
                     "style": "primary",
                     "value": event["id"],
                     "action_id": "approve-event",
+                }
+            )
+            buttons.append(
+                {
+                    "type": "button",
+                    "text": {"type": "plain_text", "text": "Reject", "emoji": True},
+                    "style": "danger",
+                    "value": event["id"],
+                    "action_id": "reject-event",
                 }
             )
         if user_id == event["fields"]["Leader Slack ID"] or admin:

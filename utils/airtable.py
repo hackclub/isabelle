@@ -69,11 +69,13 @@ class AirtableManager:
                 event for event in events if event["fields"].get("Approved", False)
             ]
         events = sorted(events, key=lambda event: event["fields"]["Start Time"])
+        events = [event for event in events if not event['fields'].get('Canceled', False)]
         return events
 
     def get_upcoming_events(self):
         events = self.events_table.all(view="Future Events")
         events = [event for event in events if event["fields"].get("Approved", False)]
+        events = [event for event in events if not event['fields'].get('Canceled', False)]
         return events
 
     def update_event(
