@@ -2,7 +2,8 @@ from datetime import datetime, timezone
 from slack_sdk import WebClient
 
 from utils.env import env
-from utils.utils import user_in_safehouse, md_to_mrkdwn
+from utils.utils import user_in_safehouse, rich_text_to_mrkdwn
+import json
 
 
 def get_home(user_id: str, client: WebClient):
@@ -47,7 +48,8 @@ def get_home(user_id: str, client: WebClient):
             "Ends at %I:%M %p"
         )
         formatted_time = f"<!date^{int(datetime.fromisoformat(event['fields']['End Time']).timestamp())}^Ends at {{time}}|{fallback_time}>"
-        mrkdwn = md_to_mrkdwn(event["fields"]["Description"])
+        rich_text = json.loads(event["fields"]["Raw Description"])
+        mrkdwn = rich_text_to_mrkdwn(rich_text['elements'])
         current_events_blocks.append(
             {
                 "type": "section",
@@ -117,7 +119,8 @@ def get_home(user_id: str, client: WebClient):
             "%A, %B %d at %I:%M %p"
         )
         formatted_time = f"<!date^{int(datetime.fromisoformat(event['fields']['Start Time']).timestamp())}^{{date_long_pretty}} at {{time}}|{fallback_time}>"
-        mrkdwn = md_to_mrkdwn(event["fields"]["Description"])
+        rich_text = json.loads(event["fields"]["Raw Description"])
+        mrkdwn = rich_text_to_mrkdwn(rich_text['elements'])
         upcoming_events_blocks.append(
             {
                 "type": "section",
