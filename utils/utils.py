@@ -3,8 +3,6 @@ from slack_sdk import WebClient
 from urllib.parse import quote
 
 import re
-import mistune
-
 
 client = WebClient(token=env.slack_bot_token)
 ZWSP = '\u200B'
