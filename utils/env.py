@@ -41,7 +41,9 @@ class Environment:
             raise Exception("SENTRY_DSN is not set")
 
         self.airtable = AirtableManager(
-            api_key=self.airtable_api_key, base_id=self.airtable_base_id, production=self.environemnt == "production"
+            api_key=self.airtable_api_key,
+            base_id=self.airtable_base_id,
+            production=self.environemnt == "production",
         )
 
         self.mailer = Email(sender=google_username, password=google_password)
@@ -50,7 +52,7 @@ class Environment:
             "U054VC2KM9P",  # Amber
             "U0409FSKU82",  # Arpan
             "U01MPHKFZ7S",  # Aarya
-            "UDK5M9Y13",    # Chris
+            "UDK5M9Y13",  # Chris
             "U06QST7V0J2",  # Eesha
         ]
 

@@ -6,8 +6,16 @@ import json
 class AirtableManager:
     def __init__(self, api_key: str, base_id: str, production: bool = False):
         api = Api(api_key)
-        self.events_table = api.table(base_id, "Events") if production else api.table(base_id, "Test Events")
-        self.users_table = api.table(base_id, "Users") if production else api.table(base_id, "Test Users")
+        self.events_table = (
+            api.table(base_id, "Events")
+            if production
+            else api.table(base_id, "Test Events")
+        )
+        self.users_table = (
+            api.table(base_id, "Users")
+            if production
+            else api.table(base_id, "Test Users")
+        )
         print("Connected to Airtable")
 
     def create_event(

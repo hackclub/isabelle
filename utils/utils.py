@@ -5,7 +5,8 @@ from urllib.parse import quote
 import re
 
 client = WebClient(token=env.slack_bot_token)
-ZWSP = '\u200B'
+ZWSP = "\u200B"
+
 
 def user_in_safehouse(user_id: str):
     sad_members = client.conversations_members(channel=env.slack_sad_channel)["members"]
@@ -85,7 +86,9 @@ def parse_elements_to_mrkdwn(elements):
             text = element["text"]
             if "style" in element:
                 styles = element["style"]
-                words = re.split(r'(\s+)', text)  # Split by whitespace but keep the whitespace
+                words = re.split(
+                    r"(\s+)", text
+                )  # Split by whitespace but keep the whitespace
                 formatted_words = []
                 for word in words:
                     if word.strip():  # Only apply formatting to non-whitespace words
@@ -121,6 +124,7 @@ def parse_elements_to_mrkdwn(elements):
         elif element["type"] == "usergroup":
             mrkdwn += f"<!subteam^{element['usergroup_id']}>"
     return mrkdwn
+
 
 def rich_text_to_mrkdwn(data):
     mrkdwn = ""
