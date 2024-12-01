@@ -28,7 +28,7 @@ def handle_reject_event_view(ack: Callable, body: dict[str, Any], client: WebCli
         )
         return
     
-    event = env.airtable.update_event(event_id, **{"Canceled": True})
+    event = env.airtable.update_event(event_id, **{"Canceled": True, "Raw Cancelation Reason": message})
 
     client.chat_postMessage(
         channel=env.slack_approval_channel,
