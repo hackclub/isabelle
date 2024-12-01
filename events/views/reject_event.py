@@ -2,7 +2,7 @@ from typing import Any, Callable
 from slack_sdk import WebClient
 
 from utils.env import env
-
+import json
 
 def handle_reject_event_view(ack: Callable, body: dict[str, Any], client: WebClient):
     ack()
@@ -28,7 +28,7 @@ def handle_reject_event_view(ack: Callable, body: dict[str, Any], client: WebCli
         )
         return
     
-    event = env.airtable.update_event(event_id, **{"Canceled": True, "Raw Cancelation Reason": message})
+    event = env.airtable.update_event(event_id, **{"Canceled": True, "Raw Cancelation Reason": json.dumps(message)})
 
     client.chat_postMessage(
         channel=env.slack_approval_channel,
