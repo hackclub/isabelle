@@ -8,35 +8,25 @@ load_dotenv()
 
 class Environment:
     def __init__(self):
-        self.slack_bot_token = os.environ.get("SLACK_BOT_TOKEN")
-        self.slack_signing_secret = os.environ.get("SLACK_SIGNING_SECRET")
-        self.slack_approval_channel = os.environ.get("SLACK_APPROVAL_CHANNEL")
-        self.slack_sad_channel = os.environ.get("SLACK_SAD_CHANNEL")
-        self.airtable_api_key = os.environ.get("AIRTABLE_API_KEY")
-        self.airtable_base_id = os.environ.get("AIRTABLE_BASE_ID")
-        google_username = os.environ.get("GOOGLE_USERNAME")
-        google_password = os.environ.get("GOOGLE_PASSWORD")
-        self.sentry_dsn = os.environ.get("SENTRY_DSN")
+        self.slack_bot_token = os.environ.get("SLACK_BOT_TOKEN", "unset")
+        self.slack_signing_secret = os.environ.get("SLACK_SIGNING_SECRET", "unset")
+        self.slack_approval_channel = os.environ.get("SLACK_APPROVAL_CHANNEL", "unset")
+        self.slack_sad_channel = os.environ.get("SLACK_SAD_CHANNEL", "unset")
+        self.airtable_api_key = os.environ.get("AIRTABLE_API_KEY", "unset")
+        self.airtable_base_id = os.environ.get("AIRTABLE_BASE_ID", "unset")
+        google_username = os.environ.get("GOOGLE_USERNAME", "unset")
+        google_password = os.environ.get("GOOGLE_PASSWORD", "unset")
+        self.sentry_dsn = os.environ.get("SENTRY_DSN", None)
         self.environemnt = os.environ.get("ENVIRONMENT", "development")
 
         self.port = int(os.environ.get("PORT", 3000))
 
-        if not self.slack_bot_token:
-            raise Exception("SLACK_BOT_TOKEN is not set")
-        if not self.slack_signing_secret:
-            raise Exception("SLACK_SIGNING_SECRET is not set")
-        if not self.slack_approval_channel:
-            raise Exception("SLACK_APPROVAL_CHANNEL is not set")
-        if not self.slack_sad_channel:
-            raise Exception("SLACK_SAD_CHANNEL is not set")
-        if not self.airtable_api_key:
-            raise Exception("AIRTABLE_API_KEY is not set")
-        if not self.airtable_base_id:
-            raise Exception("AIRTABLE_BASE_ID is not set")
-        if not google_username:
-            raise Exception("GOOGLE_USERNAME is not set")
-        if not google_password:
-            raise Exception("GOOGLE_PASSWORD is not set")
+        
+        unset = [key for key, value in self.__dict__.items() if value == "unset"]
+        
+        if unset:
+            raise ValueError(f"Missing environment variables: {', '.join(unset)}")
+        
         if not self.sentry_dsn and self.environemnt == "production":
             raise Exception("SENTRY_DSN is not set")
 
