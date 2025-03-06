@@ -1,3 +1,4 @@
+from typing import Mapping
 from pyairtable import Api
 from datetime import datetime, timezone
 import json
@@ -42,9 +43,9 @@ class AirtableManager:
                 "Description": md_description,
                 "Raw Description": raw_description_string,
                 "Start Time": datetime.fromtimestamp(
-                    start_time, timezone.utc
+                    float(start_time), timezone.utc
                 ).isoformat(),
-                "End Time": datetime.fromtimestamp(end_time, timezone.utc).isoformat(),
+                "End Time": datetime.fromtimestamp(float(end_time), timezone.utc).isoformat(),
                 "Event Link": location,
                 "Leader Slack ID": host_id,
                 "Leader": host_name,
@@ -54,9 +55,6 @@ class AirtableManager:
         )
         return event
 
-    def update_event(self, id: str, **updates: dict):
-        event = self.events_table.update(id, updates)
-        return event
 
     def get_event(self, id: str):
         user = self.events_table.get(id)
@@ -80,8 +78,8 @@ class AirtableManager:
 
     def update_event(
         self,
-        id: str | None = None,
-        **updates: dict,
+        id: str,
+        **updates: Mapping,
     ):
         event = self.events_table.update(id, updates)
         return event
