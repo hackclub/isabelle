@@ -62,7 +62,7 @@ def get_propose_event_modal(user_id: str):
                 "elements": [
                     {
                         "type": "mrkdwn",
-                        "text": "_Defaults to #high-seas-bulletin channel link if not provided._",
+                        "text": "_Defaults to #community huddle link if not provided._",
                     }
                 ],
             },

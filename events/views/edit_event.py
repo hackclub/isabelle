@@ -21,7 +21,7 @@ def handle_edit_event_view(ack: Callable, body: dict[str, Any], client: WebClien
     host_id = values["host"]["host"]["selected_user"]
     location = (
         values.get("location", {}).get("location", {}).get("value")
-        or "https://hackclub.slack.com/archives/C07TNAZGMHS"
+        or "https://app.slack.com/huddle/T0266FRGM/C01D7AHKMPF"
     )
 
     user = client.users_info(user=host_id)

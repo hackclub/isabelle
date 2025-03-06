@@ -91,8 +91,8 @@ def get_home(user_id: str, client: WebClient):
                 "value": "join",
                 "style": "primary",
                 "url": event["fields"].get(
-                    "Event Link", "https://hackclub.slack.com/archives/C07TNAZGMHS"
-                ),  # Default to #high-seas-bulletin
+                    "Event Link", "https://app.slack.com/huddle/T0266FRGM/C01D7AHKMPF"
+                ),  # Default to #community huddle
             }
         )
         if user_id == event["fields"]["Leader Slack ID"] or admin:
