@@ -187,15 +187,16 @@ def get_home(user_id: str, client: WebClient):
                 else {}
             )
 
-            buttons.append(
-                {
-                    "type": "button",
-                    "text": {"type": "plain_text", "text": text, "emoji": True},
-                    "value": event["id"],
-                    "action_id": "rsvp",
-                    **style_dict,
-                }
-            )
+            # Temporarily hiding until I fix
+            # buttons.append(
+            #     {
+            #         "type": "button",
+            #         "text": {"type": "plain_text", "text": text, "emoji": True},
+            #         "value": event["id"],
+            #         "action_id": "rsvp",
+            #         **style_dict,
+            #     }
+            # )
         if event["fields"].get("Approved", False):
             # buttons.append(
             #     {
