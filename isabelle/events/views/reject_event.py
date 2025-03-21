@@ -1,8 +1,11 @@
-from typing import Any, Callable
+import json
+from typing import Any
+from typing import Callable
+
 from slack_sdk import WebClient
 
 from isabelle.utils.env import env
-import json
+
 
 def handle_reject_event_view(ack: Callable, body: dict[str, Any], client: WebClient):
     ack()
@@ -19,7 +22,7 @@ def handle_reject_event_view(ack: Callable, body: dict[str, Any], client: WebCli
             text=f"Event with id `{event_id}` not found.",
         )
         return
-    
+
     if event["fields"].get("Canceled", False):
         client.chat_postEphemeral(
             user=body["user"]["id"],
@@ -27,8 +30,10 @@ def handle_reject_event_view(ack: Callable, body: dict[str, Any], client: WebCli
             text=f"Event with id `{event_id}` has already been rejected.",
         )
         return
-    
-    event = env.airtable.update_event(event_id, **{"Canceled": True, "Raw Cancelation Reason": json.dumps(message)})
+
+    event = env.airtable.update_event(
+        event_id, **{"Canceled": True, "Raw Cancelation Reason": json.dumps(message)}
+    )
 
     client.chat_postMessage(
         channel=env.slack_approval_channel,
@@ -38,13 +43,14 @@ def handle_reject_event_view(ack: Callable, body: dict[str, Any], client: WebCli
                 "type": "section",
                 "text": {
                     "type": "mrkdwn",
-                    "text": f"<@{body['user']['id']}> rejected {event['fields']['Title']} for <@{event['fields']['Leader Slack ID']}> with the following reason."
-                }
-            }, {
+                    "text": f"<@{body['user']['id']}> rejected {event['fields']['Title']} for <@{event['fields']['Leader Slack ID']}> with the following reason.",
+                },
+            },
+            {
                 "type": "divider",
             },
-            message
-        ]
+            message,
+        ],
     )
 
     client.chat_postMessage(
@@ -55,12 +61,12 @@ def handle_reject_event_view(ack: Callable, body: dict[str, Any], client: WebCli
                 "type": "section",
                 "text": {
                     "type": "mrkdwn",
-                    "text": f"Your event {event['fields']['Title']} has been rejected by <@{body['user']['id']}> :(\nPlease reach out to them if you have any questions or need help."
-                }
-            }, {
+                    "text": f"Your event {event['fields']['Title']} has been rejected by <@{body['user']['id']}> :(\nPlease reach out to them if you have any questions or need help.",
+                },
+            },
+            {
                 "type": "divider",
             },
-            message
-        ]
+            message,
+        ],
     )
-

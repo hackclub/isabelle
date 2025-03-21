@@ -1,7 +1,9 @@
-from typing import Mapping
-from pyairtable import Api
-from datetime import datetime, timezone
 import json
+from datetime import datetime
+from datetime import timezone
+from typing import Mapping
+
+from pyairtable import Api
 
 
 class AirtableManager:
@@ -45,7 +47,9 @@ class AirtableManager:
                 "Start Time": datetime.fromtimestamp(
                     float(start_time), timezone.utc
                 ).isoformat(),
-                "End Time": datetime.fromtimestamp(float(end_time), timezone.utc).isoformat(),
+                "End Time": datetime.fromtimestamp(
+                    float(end_time), timezone.utc
+                ).isoformat(),
                 "Event Link": location,
                 "Leader Slack ID": host_id,
                 "Leader": host_name,
@@ -54,7 +58,6 @@ class AirtableManager:
             }
         )
         return event
-
 
     def get_event(self, id: str):
         user = self.events_table.get(id)
@@ -67,13 +70,17 @@ class AirtableManager:
                 event for event in events if event["fields"].get("Approved", False)
             ]
         events = sorted(events, key=lambda event: event["fields"]["Start Time"])
-        events = [event for event in events if not event['fields'].get('Canceled', False)]
+        events = [
+            event for event in events if not event["fields"].get("Canceled", False)
+        ]
         return events
 
     def get_upcoming_events(self):
         events = self.events_table.all(view="Future Events")
         events = [event for event in events if event["fields"].get("Approved", False)]
-        events = [event for event in events if not event['fields'].get('Canceled', False)]
+        events = [
+            event for event in events if not event["fields"].get("Canceled", False)
+        ]
         return events
 
     def update_event(

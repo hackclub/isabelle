@@ -1,12 +1,15 @@
-from typing import Any, Callable
+import json
+from datetime import datetime
+from datetime import timezone
+from typing import Any
+from typing import Callable
+
 from slack_sdk import WebClient
-from datetime import datetime, timezone
 
 from isabelle.utils.env import env
-from isabelle.utils.utils import rich_text_to_md, rich_text_to_mrkdwn
+from isabelle.utils.utils import rich_text_to_md
+from isabelle.utils.utils import rich_text_to_mrkdwn
 from isabelle.views.app_home import get_home
-
-import json
 
 
 def handle_edit_event_view(ack: Callable, body: dict[str, Any], client: WebClient):

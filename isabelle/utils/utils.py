@@ -1,10 +1,11 @@
-from isabelle.utils.env import env
-from slack_sdk import WebClient
-
 import re
 
+from slack_sdk import WebClient
+
+from isabelle.utils.env import env
+
 client = WebClient(token=env.slack_bot_token)
-ZWSP = "\u200B"
+ZWSP = "\u200b"
 
 
 def user_in_safehouse(user_id: str):

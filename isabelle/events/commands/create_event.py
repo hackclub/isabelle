@@ -1,9 +1,10 @@
+from typing import Any
+from typing import Callable
+
 from slack_sdk import WebClient
 
-from isabelle.views.create_event import get_create_event_modal
 from isabelle.utils.utils import user_in_safehouse
-
-from typing import Any, Callable
+from isabelle.views.create_event import get_create_event_modal
 
 
 def handle_create_event_cmd(ack: Callable, body: dict[str, Any], client: WebClient):

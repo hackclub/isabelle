@@ -1,6 +1,7 @@
-from isabelle.utils.env import env
-from datetime import datetime
 import json
+from datetime import datetime
+
+from isabelle.utils.env import env
 
 
 def get_edit_event_modal(event_id: str):

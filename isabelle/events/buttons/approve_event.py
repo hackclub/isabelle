@@ -1,9 +1,10 @@
+from typing import Any
+from typing import Callable
+
 from slack_sdk import WebClient
 
 from isabelle.utils.env import env
 from isabelle.views.app_home import get_home
-
-from typing import Any, Callable
 
 
 def handle_approve_event_btn(ack: Callable, body: dict[str, Any], client: WebClient):

@@ -1,8 +1,9 @@
+from typing import Any
+from typing import Callable
+
 from slack_sdk import WebClient
 
 from isabelle.views.propose_event import get_propose_event_modal
-
-from typing import Any, Callable
 
 
 def handle_propose_event_btn(ack: Callable, body: dict[str, Any], client: WebClient):

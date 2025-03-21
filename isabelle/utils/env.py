@@ -1,7 +1,9 @@
-from isabelle.utils.airtable import AirtableManager
-from dotenv import load_dotenv
 import os
+
+from dotenv import load_dotenv
+
 from .email import Email
+from isabelle.utils.airtable import AirtableManager
 
 load_dotenv()
 
@@ -21,12 +23,11 @@ class Environment:
 
         self.port = int(os.environ.get("PORT", 3000))
 
-        
         unset = [key for key, value in self.__dict__.items() if value == "unset"]
-        
+
         if unset:
             raise ValueError(f"Missing environment variables: {', '.join(unset)}")
-        
+
         if not self.sentry_dsn and self.environemnt == "production":
             raise Exception("SENTRY_DSN is not set")
 

@@ -1,9 +1,10 @@
+from typing import Any
+from typing import Callable
+
 from slack_sdk import WebClient
 
 from isabelle.utils.env import env
 from isabelle.views.reject_event import get_reject_event_modal
-
-from typing import Any, Callable
 
 
 def handle_reject_event_btn(ack: Callable, body: dict[str, Any], client: WebClient):
@@ -20,4 +21,8 @@ def handle_reject_event_btn(ack: Callable, body: dict[str, Any], client: WebClie
 
     event_id = body["actions"][0]["value"]
 
-    client.views_open(user_id=user_id, view=get_reject_event_modal(event_id), trigger_id=body["trigger_id"])
+    client.views_open(
+        user_id=user_id,
+        view=get_reject_event_modal(event_id),
+        trigger_id=body["trigger_id"],
+    )

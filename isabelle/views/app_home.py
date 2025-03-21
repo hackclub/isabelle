@@ -1,9 +1,12 @@
-from datetime import datetime, timezone
+import json
+from datetime import datetime
+from datetime import timezone
+
 from slack_sdk import WebClient
 
 from isabelle.utils.env import env
-from isabelle.utils.utils import user_in_safehouse, rich_text_to_mrkdwn
-import json
+from isabelle.utils.utils import rich_text_to_mrkdwn
+from isabelle.utils.utils import user_in_safehouse
 
 
 def get_home(user_id: str, client: WebClient):
@@ -17,7 +20,7 @@ def get_home(user_id: str, client: WebClient):
         else False
     )
     admin = True if user_id in env.authorised_users or ws_admin else False
-    airtable_user = env.airtable.get_user(user_id)
+    # airtable_user = env.airtable.get_user(user_id)
 
     events = env.airtable.get_all_events(unapproved=True)
     upcoming_events = [
@@ -173,30 +176,30 @@ def get_home(user_id: str, client: WebClient):
                     "action_id": "edit-event",
                 }
             )
-        if not user_id == event["fields"]["Leader Slack ID"]:
-            text = (
-                ":bell: Interested"
-                if airtable_user["id"]
-                not in event["fields"].get("Interested Users", [])
-                else ":white_check_mark: Going"
-            )
-            style_dict = (
-                {"style": "primary"}
-                if airtable_user["id"]
-                not in event["fields"].get("Interested Users", [])
-                else {}
-            )
+        # if not user_id == event["fields"]["Leader Slack ID"]:
+        #     text = (
+        #         ":bell: Interested"
+        #         if airtable_user["id"]
+        #         not in event["fields"].get("Interested Users", [])
+        #         else ":white_check_mark: Going"
+        #     )
+        #     style_dict = (
+        #         {"style": "primary"}
+        #         if airtable_user["id"]
+        #         not in event["fields"].get("Interested Users", [])
+        #         else {}
+        #     )
 
-            # Temporarily hiding until I fix
-            # buttons.append(
-            #     {
-            #         "type": "button",
-            #         "text": {"type": "plain_text", "text": text, "emoji": True},
-            #         "value": event["id"],
-            #         "action_id": "rsvp",
-            #         **style_dict,
-            #     }
-            # )
+        # Temporarily hiding until I fix
+        # buttons.append(
+        #     {
+        #         "type": "button",
+        #         "text": {"type": "plain_text", "text": text, "emoji": True},
+        #         "value": event["id"],
+        #         "action_id": "rsvp",
+        #         **style_dict,
+        #     }
+        # )
         if event["fields"].get("Approved", False):
             # buttons.append(
             #     {
