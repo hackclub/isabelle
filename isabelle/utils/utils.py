@@ -1,6 +1,5 @@
-from .env import env
+from isabelle.utils.env import env
 from slack_sdk import WebClient
-from urllib.parse import quote
 
 import re
 

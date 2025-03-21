@@ -1,8 +1,8 @@
 from datetime import datetime, timezone
 from slack_sdk import WebClient
 
-from utils.env import env
-from utils.utils import user_in_safehouse, rich_text_to_mrkdwn
+from isabelle.utils.env import env
+from isabelle.utils.utils import user_in_safehouse, rich_text_to_mrkdwn
 import json
 
 

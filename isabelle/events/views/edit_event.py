@@ -2,13 +2,14 @@ from typing import Any, Callable
 from slack_sdk import WebClient
 from datetime import datetime, timezone
 
-from utils.env import env
-from utils.utils import rich_text_to_md, rich_text_to_mrkdwn
-from views.app_home import get_home
+from isabelle.utils.env import env
+from isabelle.utils.utils import rich_text_to_md, rich_text_to_mrkdwn
+from isabelle.views.app_home import get_home
+
 import json
 
 
-def handle_create_event_view(ack: Callable, body: dict[str, Any], client: WebClient):
+def handle_edit_event_view(ack: Callable, body: dict[str, Any], client: WebClient):
     ack()
     view = body["view"]
     values = view["state"]["values"]
@@ -27,16 +28,28 @@ def handle_create_event_view(ack: Callable, body: dict[str, Any], client: WebCli
     host_name = user["user"]["real_name"]
     host_pfp = user["user"]["profile"]["image_192"]
 
-    event = env.airtable.create_event(
-        title[0],
-        md,
-        description,
-        start_time[0],
-        end_time[0],
-        location,
-        host_id,
-        host_name,
-        host_pfp,
+    raw_description_string = json.dumps(
+        {
+            "type": "rich_text",
+            "elements": description,
+        }
+    )
+
+    event = env.airtable.update_event(
+        id=body["view"]["private_metadata"],
+        **{
+            "Title": title[0],
+            "Description": md,
+            "Raw Description": raw_description_string,
+            "Start Time": datetime.fromtimestamp(
+                start_time[0], timezone.utc
+            ).isoformat(),
+            "End Time": datetime.fromtimestamp(end_time[0], timezone.utc).isoformat(),
+            "Event Link": location,
+            "Leader Slack ID": host_id,
+            "Leader": host_name,
+            "Avatar": [{"url": host_pfp}],
+        },
     )
     if not event:
         client.chat_postEphemeral(
@@ -53,17 +66,17 @@ def handle_create_event_view(ack: Callable, body: dict[str, Any], client: WebCli
     user_id = body.get("user", {}).get("id", "")
     host_mention = f"for <@{host_id}>" if host_id != user_id else ""
     host_str = f"<@{user_id}> {host_mention}"
-    rich_text = json.loads(event["fields"]["Raw Description"])
+    rich_text = json.loads(raw_description_string)
     mrkdwn = rich_text_to_mrkdwn(rich_text)
     client.chat_postMessage(
         channel=env.slack_approval_channel,
-        text=f"New event request by <@{body['user']['id']}>!\nTitle: {title[0]}\nDescription: {mrkdwn}\nStart Time: {start_time[0]}\nEnd Time: {end_time[0]}",
+        text=f"Event updated by <@{body['user']['id']}>!\nTitle: {title[0]}\nDescription: {mrkdwn}\nStart Time: {start_time[0]}\nEnd Time: {end_time[0]}",
         blocks=[
             {
                 "type": "section",
                 "text": {
                     "type": "mrkdwn",
-                    "text": f"New event request by {host_str}!\n*Title:* {title[0]}\n*Description:* {mrkdwn}\n*Start Time (local time):* <!date^{start_time[0]}^{{date_num}} at {{time_secs}}|{fallback_start_time}>\n*End Time (local time):* <!date^{end_time[0]}^{{date_num}} at {{time_secs}}|{fallback_end_time}>",
+                    "text": f"Event updated by {host_str}!\n*Title:* {title[0]}\n*Description:* {mrkdwn}\n*Start Time (local time):* <!date^{start_time[0]}^{{date_num}} at {{time_secs}}|{fallback_start_time}>\n*End Time (local time):* <!date^{end_time[0]}^{{date_num}} at {{time_secs}}|{fallback_end_time}>",
                 },
             }
         ],

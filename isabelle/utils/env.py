@@ -1,4 +1,4 @@
-from .airtable import AirtableManager
+from isabelle.utils.airtable import AirtableManager
 from dotenv import load_dotenv
 import os
 from .email import Email

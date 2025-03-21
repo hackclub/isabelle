@@ -1,6 +1,6 @@
 from slack_sdk import WebClient
 
-from views.edit_event import get_edit_event_modal
+from isabelle.views.edit_event import get_edit_event_modal
 
 from typing import Any, Callable
 

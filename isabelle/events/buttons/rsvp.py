@@ -1,7 +1,7 @@
 from typing import Any, Callable
 from slack_sdk import WebClient
-from utils.env import env
-from views.app_home import get_home
+from isabelle.utils.env import env
+from isabelle.views.app_home import get_home
 
 
 def handle_rsvp_btn(ack: Callable, body: dict[str, Any], client: WebClient):

@@ -1,7 +1,7 @@
 from slack_sdk import WebClient
 
-from utils.env import env
-from views.reject_event import get_reject_event_modal
+from isabelle.utils.env import env
+from isabelle.views.reject_event import get_reject_event_modal
 
 from typing import Any, Callable
 

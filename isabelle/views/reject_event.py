@@ -1,4 +1,4 @@
-from utils.env import env
+from isabelle.utils.env import env
 
 def get_reject_event_modal(event_id: str):
     event = env.airtable.get_event(event_id)

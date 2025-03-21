@@ -1,7 +1,7 @@
 from slack_sdk import WebClient
 
-from utils.env import env
-from views.app_home import get_home
+from isabelle.utils.env import env
+from isabelle.views.app_home import get_home
 
 from typing import Any, Callable
 

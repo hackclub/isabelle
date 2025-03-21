@@ -1,7 +1,7 @@
 from typing import Any, Callable
 from slack_sdk import WebClient
 
-from utils.env import env
+from isabelle.utils.env import env
 import json
 
 def handle_reject_event_view(ack: Callable, body: dict[str, Any], client: WebClient):

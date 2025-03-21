@@ -1,0 +1,26 @@
+[project]
+name = "isabelle"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.13"
+dependencies = [
+    "pyairtable>=3.0.2",
+    "python-dotenv>=1.0.1",
+    "requests>=2.32.3",
+    "schedule>=1.2.2",
+    "sentry-sdk>=2.23.1",
+    "slack-bolt>=1.23.0",
+]
+
+[project.scripts]
+isabelle = "isabelle.__main__:start"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = [
+    "pre-commit>=4.1.0",
+]
