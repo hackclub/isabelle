@@ -1,6 +1,7 @@
 from threading import Thread
 
 import sentry_sdk
+from slack_bolt.adapter.socket_mode import SocketModeHandler
 
 from isabelle.utils.env import env
 from isabelle.utils.rsvp_checker import rsvp_checker
@@ -13,7 +14,12 @@ def start():
     rsvp_thread = Thread(target=rsvp_checker, daemon=True)
     rsvp_thread.start()
 
-    app.start(env.port)
+
+    if env.slack_app_token is not None:
+        handler = SocketModeHandler(app, env.slack_app_token)
+        handler.start()
+    else:
+        app.start(env.port)
 
 
 if __name__ == "__main__":

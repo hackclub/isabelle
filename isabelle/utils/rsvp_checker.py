@@ -15,6 +15,7 @@ def send_reminder(
 ):
     client.chat_postMessage(channel=user_id, text=message)
     if email:
+        pass
         email_addr = client.users_info(user=user_id)["user"]["profile"]["email"]
         env.mailer.send_email(
             email_addr, f"{event['fields']['Title']} Reminder!", message
