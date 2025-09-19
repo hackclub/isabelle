@@ -20,6 +20,7 @@ class Environment:
         # google_password = os.environ.get("GOOGLE_PASSWORD", "unset")
         self.sentry_dsn = os.environ.get("SENTRY_DSN", None)
         self.environemnt = os.environ.get("ENVIRONMENT", "development")
+        self.slack_app_token = os.environ.get("SLACK_APP_TOKEN")
 
         self.port = int(os.environ.get("PORT", 3000))
 
@@ -45,6 +46,7 @@ class Environment:
             "U01MPHKFZ7S",  # Aarya
             "UDK5M9Y13",  # Chris
             "U06QST7V0J2",  # Eesha
+            "U072PTA5BNG"   # Victorio
         ]
 
 
