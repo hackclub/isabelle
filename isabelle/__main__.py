@@ -4,6 +4,7 @@ from slack_bolt.adapter.socket_mode import SocketModeHandler
 from isabelle.utils.env import env
 import isabelle.utils.rsvp_checker as rspv_checker
 from isabelle.utils.slack import app
+# from isabelle.utils.rsvp_checker import rsvp_checker
 
 
 def start():

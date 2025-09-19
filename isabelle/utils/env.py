@@ -3,6 +3,7 @@ import os
 from dotenv import load_dotenv
 
 from isabelle.utils.airtable import AirtableManager
+# from .email import Email
 
 load_dotenv()
 
@@ -15,8 +16,8 @@ class Environment:
         self.slack_sad_channel = os.environ.get("SLACK_SAD_CHANNEL", "unset")
         self.airtable_api_key = os.environ.get("AIRTABLE_API_KEY", "unset")
         self.airtable_base_id = os.environ.get("AIRTABLE_BASE_ID", "unset")
-        google_username = os.environ.get("GOOGLE_USERNAME", "unset")
-        google_password = os.environ.get("GOOGLE_PASSWORD", "unset")
+        # google_username = os.environ.get("GOOGLE_USERNAME", "unset")
+        # google_password = os.environ.get("GOOGLE_PASSWORD", "unset")
         self.sentry_dsn = os.environ.get("SENTRY_DSN", None)
         self.environemnt = os.environ.get("ENVIRONMENT", "development")
         self.slack_app_token = os.environ.get("SLACK_APP_TOKEN")
@@ -37,6 +38,7 @@ class Environment:
             production=self.environemnt == "production",
         )
 
+        # self.mailer = Email(sender=google_username, password=google_password)
 
         self.authorised_users = [
             "U054VC2KM9P",  # Amber
