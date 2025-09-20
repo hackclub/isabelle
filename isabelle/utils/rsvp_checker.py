@@ -1,6 +1,8 @@
 import time
 from datetime import datetime
 from typing import Any
+from threading import Thread
+
 
 import schedule
 from slack_sdk import WebClient
@@ -15,6 +17,7 @@ def send_reminder(
 ):
     client.chat_postMessage(channel=user_id, text=message)
     if email:
+        pass
         email_addr = client.users_info(user=user_id)["user"]["profile"]["email"]
         env.mailer.send_email(
             email_addr, f"{event['fields']['Title']} Reminder!", message
@@ -22,6 +25,7 @@ def send_reminder(
 
 
 def check_rsvps():
+    print("Checking rspvs, its", time.time())
     events = env.airtable.get_all_events()
 
     for event in events:
@@ -66,9 +70,18 @@ def check_rsvps():
                 )
             env.airtable.update_event(event["id"], **{"Sent Starting Reminder": True})
 
+def check_rsvps_in_thread():
+    thread = Thread(target=check_rsvps)
+    thread.start()
+
+def init():
+    schedule.every().minute.do(check_rsvps_in_thread)
+    print("Initialized RSVP checker")
+    rsvp_thread = Thread(target=rsvp_checker, daemon=True)
+    rsvp_thread.start()
+
 
 def rsvp_checker():
-    schedule.every(1).minutes.do(check_rsvps)
-    while True:
+    while True:        
         schedule.run_pending()
         time.sleep(1)
