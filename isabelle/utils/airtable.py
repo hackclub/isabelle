@@ -127,3 +127,10 @@ class AirtableManager:
             events.append(event_id)
         user = self.update_user(user["id"], **{"Interesting Events": events})
         return user
+    
+    def set_rsvp_msg(self,event_id, message_ts, channel_id, emoji):
+        e = emoji or "any"
+        if type(message_ts) is not str or type(channel_id) is not str:
+            raise Exception("invalid message ts or channel id")
+        
+        self.events_table.update(event_id, {"rsvp-msg":f"{message_ts}-{channel_id}-{e}"})

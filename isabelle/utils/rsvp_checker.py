@@ -76,7 +76,7 @@ def check_rsvps_in_thread():
 
 def init():
     schedule.every().minute.do(check_rsvps_in_thread)
-    print("Initialized RSPV checker")
+    print("Initialized RSVP checker")
     rsvp_thread = Thread(target=rsvp_checker, daemon=True)
     rsvp_thread.start()
 

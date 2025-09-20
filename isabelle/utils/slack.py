@@ -13,6 +13,9 @@ from isabelle.events.buttons.rsvp import handle_rsvp_btn
 from isabelle.events.views.create_event import handle_create_event_view
 from isabelle.events.views.edit_event import handle_edit_event_view
 from isabelle.events.views.reject_event import handle_reject_event_view
+from isabelle.events.shortcuts.set_rsvp_msg import handle_set_rsvp_msg
+from isabelle.events.views.rsvp_msg_set_response import handle_rsvp_msg_set_response
+from isabelle.events.reaction_added import handle_reaction_added
 from isabelle.utils.env import env
 from isabelle.views.app_home import get_home
 
@@ -75,3 +78,15 @@ def add_to_gcal(ack: Callable):
 @app.action("rsvp")
 def rsvp(ack: Callable, body: dict[str, Any], client: WebClient):
     handle_rsvp_btn(ack, body, client)
+
+@app.shortcut("set_rsvp_msg")
+def set_rsvp_msg(ack: Callable, shortcut, body, client: WebClient):
+    handle_set_rsvp_msg(ack, shortcut, body, client)
+
+@app.view("rsvp_msg_set_response")
+def rsvp_msg_set_response(ack, body, view, client):
+    handle_rsvp_msg_set_response(ack, body, view, client)
+
+@app.event("reaction_added")
+def reaction_added(body, client):
+    handle_reaction_added(body, client)
