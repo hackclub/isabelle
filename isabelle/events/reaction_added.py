@@ -2,9 +2,13 @@ from slack_sdk import WebClient
 from isabelle.utils.env import env
 def handle_reaction_added(body, client: WebClient):
     upcoming_events = env.airtable.get_upcoming_events()
+
+    if not upcoming_events:
+        print("No upcoming events found")
+        return
     
     # [(message_ts, channel_id, reaction_name, event_id)]
-    events_rsvp_triggers = list(map(lambda e: tuple((e["fields"]["rsvp-msg"] or "none-none-none").split("-") + [e["id"]]),upcoming_events)) 
+    events_rsvp_triggers = list(map(lambda e: tuple((e["fields"].get("rsvp-msg") or "none-none-none").split("-") + [e["id"]]),upcoming_events)) 
 
     event_to_rsvp = None
 
