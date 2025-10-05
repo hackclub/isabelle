@@ -16,7 +16,7 @@ def send_reminder(
     user_id: str, message: str, event: dict[str, Any], email: bool = False
 ):
     client.chat_postMessage(channel=user_id, text=message)
-    if email:
+    if email and env.mailer:
         pass
         email_addr = client.users_info(user=user_id)["user"]["profile"]["email"]
         env.mailer.send_email(
@@ -26,7 +26,7 @@ def send_reminder(
 
 def check_rsvps():
     print("Checking rspvs, its", time.time())
-    events = env.airtable.get_all_events()
+    events = env.airtable.get_upcoming_events()
 
     for event in events:
         if not event["fields"].get("Approved", False):
