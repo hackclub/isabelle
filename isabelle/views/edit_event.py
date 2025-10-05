@@ -82,5 +82,15 @@ def get_edit_event_modal(event_id: str):
                 },
                 "label": {"type": "plain_text", "text": "Host", "emoji": True},
             },
+            {
+                "type": "input",
+                "block_id":"location",
+                "element": {
+                    "type": "plain_text_input",
+                    "action_id": "location",
+                    "initial_value": event["fields"].get("Event Link")
+                },
+                "label": {"type":"plain_text", "text": "Event Location (URL)", "emoji": True}
+            }
         ],
     }
