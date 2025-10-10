@@ -6,12 +6,16 @@ readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [
     "blockkit>=2.0.4",
+    "piccolo-admin>=1.12.0",
+    "piccolo[postgres]>=1.28.0",
     "pyairtable>=3.0.2",
     "python-dotenv>=1.0.1",
     "requests>=2.32.3",
     "schedule>=1.2.2",
     "sentry-sdk>=2.23.1",
     "slack-bolt>=1.23.0",
+    "starlette>=0.48.0",
+    "uvicorn>=0.37.0",
 ]
 
 [project.scripts]
