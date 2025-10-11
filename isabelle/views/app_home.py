@@ -2,16 +2,16 @@ import json
 from datetime import datetime
 from datetime import timezone
 
-from slack_sdk import WebClient
+from slack_sdk.web.async_client import AsyncWebClient
 
 from isabelle.utils.env import env
 from isabelle.utils.utils import rich_text_to_mrkdwn
 from isabelle.utils.utils import user_in_safehouse
 
 
-def get_home(user_id: str, client: WebClient):
-    sad_member = user_in_safehouse(user_id)
-    user_info = client.users_info(user=user_id)
+async def get_home(user_id: str, client: AsyncWebClient):
+    sad_member = await user_in_safehouse(user_id)
+    user_info = await client.users_info(user=user_id)
     ws_admin = (
         True
         if user_info["user"]["is_admin"]

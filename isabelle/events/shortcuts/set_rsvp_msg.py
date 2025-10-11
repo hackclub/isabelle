@@ -1,17 +1,17 @@
 from isabelle.utils.utils import user_in_safehouse
 from isabelle.utils.env import env
-from slack_sdk import WebClient
+from slack_sdk.web.async_client import AsyncWebClient
 from blockkit import Modal, Input, RichTextInput, StaticSelect, Option, Markdown, RichText, RichTextSection, RichTextEl
 
 
-def handle_set_rsvp_msg(ack, shortcut,body, client: WebClient):
-    ack()
+async def handle_set_rsvp_msg(ack, shortcut,body, client: AsyncWebClient):
+    await ack()
     user_id = shortcut["user"]["id"]
-    sad_member = user_in_safehouse(user_id)
+    sad_member = await user_in_safehouse(user_id)
 
     
     if not sad_member:
-        client.chat_postEphemeral(
+        await client.chat_postEphemeral(
             channel=shortcut["channel"]["id"],
             user=shortcut["user"]["id"],
             text="You are not authorized to set announcement messages. Ask a SAD member to do so.",
@@ -56,7 +56,7 @@ def handle_set_rsvp_msg(ack, shortcut,body, client: WebClient):
     .build()
 )
 
-    client.views_open(
+    await client.views_open(
         trigger_id=shortcut["trigger_id"],
         view=modal
     )

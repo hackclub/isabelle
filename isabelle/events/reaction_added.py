@@ -1,6 +1,6 @@
-from slack_sdk import WebClient
+from slack_sdk.web.async_client import AsyncWebClient
 from isabelle.utils.env import env
-def handle_reaction_added(body, client: WebClient):
+async def handle_reaction_added(body, client: AsyncWebClient):
     upcoming_events = env.airtable.get_upcoming_events()
 
     if not upcoming_events:
@@ -26,7 +26,7 @@ def handle_reaction_added(body, client: WebClient):
     
     env.airtable.rsvp_to_event(event_to_rsvp,body["event"]["user"])
 
-    client.chat_postEphemeral(
+    await client.chat_postEphemeral(
         channel=body["event"]["item"]["channel"],
         user=body["event"]["user"],
         text='Successfully RSVPed to the event. You will receive reminders about the event.'

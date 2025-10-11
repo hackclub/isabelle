@@ -4,7 +4,7 @@ from datetime import timezone
 from typing import Any
 from typing import Callable
 
-from slack_sdk import WebClient
+from slack_sdk.web.async_client import AsyncWebClient
 
 from isabelle.utils.env import env
 from isabelle.utils.utils import rich_text_to_md
@@ -12,8 +12,8 @@ from isabelle.utils.utils import rich_text_to_mrkdwn
 from isabelle.views.app_home import get_home
 
 
-def handle_edit_event_view(ack: Callable, body: dict[str, Any], client: WebClient):
-    ack()
+async def handle_edit_event_view(ack: Callable, body: dict[str, Any], client: AsyncWebClient):
+    await ack()
     view = body["view"]
     values = view["state"]["values"]
     title = (values["title"]["title"]["value"],)
@@ -27,7 +27,7 @@ def handle_edit_event_view(ack: Callable, body: dict[str, Any], client: WebClien
         or "https://app.slack.com/huddle/T0266FRGM/C01D7AHKMPF"
     )
 
-    user = client.users_info(user=host_id)
+    user = await client.users_info(user=host_id)
     host_name = user["user"]["real_name"]
     host_pfp = user["user"]["profile"]["image_192"]
 
@@ -55,7 +55,7 @@ def handle_edit_event_view(ack: Callable, body: dict[str, Any], client: WebClien
         },
     )
     if not event:
-        client.chat_postEphemeral(
+        await client.chat_postEphemeral(
             user=body["user"]["id"],
             channel=body["user"]["id"],
             text=f'An error occurred whilst creating the event "{title[0]}".',
@@ -71,7 +71,7 @@ def handle_edit_event_view(ack: Callable, body: dict[str, Any], client: WebClien
     host_str = f"<@{user_id}> {host_mention}"
     rich_text = json.loads(raw_description_string)
     mrkdwn = rich_text_to_mrkdwn(rich_text)
-    client.chat_postMessage(
+    await client.chat_postMessage(
         channel=env.slack_approval_channel,
         text=f"Event updated by <@{body['user']['id']}>!\nTitle: {title[0]}\nDescription: {mrkdwn}\nStart Time: {start_time[0]}\nEnd Time: {end_time[0]}",
         blocks=[
@@ -85,4 +85,4 @@ def handle_edit_event_view(ack: Callable, body: dict[str, Any], client: WebClien
         ],
     )
 
-    client.views_publish(user_id=user_id, view=get_home(user_id, client))
+    await client.views_publish(user_id=user_id, view=await get_home(user_id, client))

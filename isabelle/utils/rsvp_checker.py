@@ -12,7 +12,7 @@ from .env import env
 client = WebClient(token=env.slack_bot_token)
 
 
-def send_reminder(
+async def send_reminder(
     user_id: str, message: str, event: dict[str, Any], email: bool = False
 ):
     client.chat_postMessage(channel=user_id, text=message)

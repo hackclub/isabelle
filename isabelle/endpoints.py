@@ -9,4 +9,4 @@ class HomeEndpoint(HTTPEndpoint):
     async def get(self, request):
 
 
-        return PlainTextResponse("Hello! Isabelle here")
+        return PlainTextResponse("Hello! Isabelle (REST API) here. https://hack.club/gh/isabelle")

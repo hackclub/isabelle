@@ -1,13 +1,14 @@
-from slack_sdk import WebClient
+from slack_sdk.web.async_client import AsyncWebClient
 from isabelle.utils.env import env
-def handle_rsvp_msg_set_response(ack: callable, body, view, client: WebClient):
-    ack()
+
+async def handle_rsvp_msg_set_response(ack: callable, body, view, client: AsyncWebClient):
+    await ack()
 
     emoji_name = extract_emoji_name(view)
     chosen_event_id = view["state"]["values"]["chosen_event"]["event_select"]["selected_option"]["value"]
     (message_ts, channel_id) = tuple(view["private_metadata"].split("-"))
     try:
-        client.reactions_add(
+        await client.reactions_add(
             channel=channel_id,
             timestamp=message_ts,
             name=emoji_name
