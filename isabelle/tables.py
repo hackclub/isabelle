@@ -1,10 +1,10 @@
 from piccolo.table import Table
-from piccolo.columns import Varchar,Boolean,Timestamp, SmallInt, Text, Array
+from piccolo.columns import Varchar,Boolean,Timestamp, SmallInt, Text, Array, UUID
 
 
 # Schema copied form airtable using PascalCase
 class Event(Table):
-    id = Varchar(primary_key=True)
+    id = UUID(primary_key=True)
     Title = Varchar()
     Description = Varchar()
     StartTime = Timestamp()
