@@ -11,7 +11,7 @@ from piccolo.columns.defaults.uuid import UUID4
 from piccolo.columns.indexes import IndexMethod
 
 
-ID = "2025-10-11T12:22:39:479085"
+ID = "2025-10-11T13:31:12:404613"
 VERSION = "1.28.0"
 DESCRIPTION = ""
 
@@ -76,7 +76,7 @@ async def forwards():
         column_class=Text,
         params={
             "default": "",
-            "null": False,
+            "null": True,
             "primary_key": False,
             "unique": False,
             "index": False,
@@ -97,7 +97,7 @@ async def forwards():
         column_class=Timestamp,
         params={
             "default": TimestampNow(),
-            "null": False,
+            "null": True,
             "primary_key": False,
             "unique": False,
             "index": False,
@@ -118,7 +118,7 @@ async def forwards():
         column_class=Timestamp,
         params={
             "default": TimestampNow(),
-            "null": False,
+            "null": True,
             "primary_key": False,
             "unique": False,
             "index": False,
@@ -140,7 +140,7 @@ async def forwards():
         params={
             "length": 32,
             "default": "",
-            "null": False,
+            "null": True,
             "primary_key": False,
             "unique": False,
             "index": False,
@@ -161,7 +161,7 @@ async def forwards():
         column_class=Text,
         params={
             "default": "",
-            "null": False,
+            "null": True,
             "primary_key": False,
             "unique": False,
             "index": False,
@@ -182,7 +182,7 @@ async def forwards():
         column_class=Text,
         params={
             "default": "",
-            "null": False,
+            "null": True,
             "primary_key": False,
             "unique": False,
             "index": False,
@@ -225,7 +225,7 @@ async def forwards():
         params={
             "length": 255,
             "default": "",
-            "null": False,
+            "null": True,
             "primary_key": False,
             "unique": False,
             "index": False,
@@ -267,7 +267,7 @@ async def forwards():
         column_class=Text,
         params={
             "default": "",
-            "null": False,
+            "null": True,
             "primary_key": False,
             "unique": False,
             "index": False,
@@ -289,7 +289,7 @@ async def forwards():
         params={
             "length": 32,
             "default": "",
-            "null": False,
+            "null": True,
             "primary_key": False,
             "unique": False,
             "index": False,
@@ -352,7 +352,7 @@ async def forwards():
         column_class=Text,
         params={
             "default": "",
-            "null": False,
+            "null": True,
             "primary_key": False,
             "unique": False,
             "index": False,
@@ -373,7 +373,7 @@ async def forwards():
         column_class=Text,
         params={
             "default": "",
-            "null": False,
+            "null": True,
             "primary_key": False,
             "unique": False,
             "index": False,
@@ -394,7 +394,7 @@ async def forwards():
         column_class=Text,
         params={
             "default": "",
-            "null": False,
+            "null": True,
             "primary_key": False,
             "unique": False,
             "index": False,
@@ -415,7 +415,7 @@ async def forwards():
         column_class=Text,
         params={
             "default": "",
-            "null": False,
+            "null": True,
             "primary_key": False,
             "unique": False,
             "index": False,
@@ -436,7 +436,7 @@ async def forwards():
         column_class=Text,
         params={
             "default": "",
-            "null": False,
+            "null": True,
             "primary_key": False,
             "unique": False,
             "index": False,
@@ -457,7 +457,7 @@ async def forwards():
         column_class=Text,
         params={
             "default": "",
-            "null": False,
+            "null": True,
             "primary_key": False,
             "unique": False,
             "index": False,
@@ -478,7 +478,7 @@ async def forwards():
         column_class=Text,
         params={
             "default": "",
-            "null": False,
+            "null": True,
             "primary_key": False,
             "unique": False,
             "index": False,
@@ -500,7 +500,7 @@ async def forwards():
         params={
             "length": 255,
             "default": "",
-            "null": False,
+            "null": True,
             "primary_key": False,
             "unique": False,
             "index": False,
@@ -521,7 +521,7 @@ async def forwards():
         column_class=SmallInt,
         params={
             "default": 0,
-            "null": False,
+            "null": True,
             "primary_key": False,
             "unique": False,
             "index": False,
@@ -605,7 +605,7 @@ async def forwards():
         column_class=Text,
         params={
             "default": "",
-            "null": False,
+            "null": True,
             "primary_key": False,
             "unique": False,
             "index": False,
@@ -626,7 +626,7 @@ async def forwards():
         column_class=Text,
         params={
             "default": "",
-            "null": False,
+            "null": True,
             "primary_key": False,
             "unique": False,
             "index": False,
@@ -646,7 +646,7 @@ async def forwards():
         column_class_name="Array",
         column_class=Array,
         params={
-            "default": list,
+            "default": [],
             "base_column": Text(
                 default="",
                 null=False,
@@ -700,7 +700,7 @@ async def forwards():
         column_class=Text,
         params={
             "default": "",
-            "null": False,
+            "null": True,
             "primary_key": False,
             "unique": False,
             "index": False,
