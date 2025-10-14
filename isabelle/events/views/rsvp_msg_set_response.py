@@ -19,7 +19,7 @@ async def handle_rsvp_msg_set_response(ack: callable, body, view, client: AsyncW
 
     ev = await env.database.set_rsvp_msg(chosen_event_id, message_ts, channel_id, emoji_name)
 
-    if ev and ev.get("rsvpMsg","") is not "":
+    if ev and ev.get("rsvpMsg","") != "":
         await client.chat_postEphemeral(
             channel=channel_id,
             user=body["user"]["id"],
