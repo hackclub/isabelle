@@ -11,6 +11,9 @@ RUN apt install -y curl
 RUN uv python install
 RUN uv sync --frozen
 
+ENV PATH="/app/.venv/bin:$PATH"
+
+
 # Run piccolo migrations on the database
 RUN piccolo migrations forwards isabelle
 RUN piccolo migrations forwards session_auth
@@ -19,6 +22,5 @@ RUN piccolo migrations forwards user
 
 EXPOSE 3000
 
-ENV PATH="/app/.venv/bin:$PATH"
 
 CMD ["python", "main.py"]
