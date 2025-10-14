@@ -30,7 +30,6 @@ async def handle_create_event_view(ack: Callable, body: dict[str, Any], client: 
 
     user = await client.users_info(user=host_id)
     host_name = user["user"]["real_name"]
-    host_pfp = user["user"]["profile"]["image_192"]
 
 
     print(end_time)
@@ -42,7 +41,6 @@ async def handle_create_event_view(ack: Callable, body: dict[str, Any], client: 
         end_time=end_time,
         leader_slack_id=host_id,
         leader_name=host_name,
-        avatar_url=host_pfp,
         event_link=location
     )
     if not event:

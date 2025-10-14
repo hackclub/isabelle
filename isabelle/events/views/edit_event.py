@@ -7,8 +7,7 @@ from typing import Callable
 from slack_sdk.web.async_client import AsyncWebClient
 
 from isabelle.utils.env import env
-from isabelle.utils.utils import rich_text_to_md
-from isabelle.utils.utils import rich_text_to_mrkdwn
+from isabelle.utils.utils import rich_text_to_mrkdwn, get_cachet_pfp, rich_text_to_md
 from isabelle.views.app_home import get_home
 
 
@@ -30,7 +29,8 @@ async def handle_edit_event_view(ack: Callable, body: dict[str, Any], client: As
     user = await client.users_info(user=host_id)
     host_name = user["user"]["real_name"]
     # TODO: Use cachet
-    host_pfp = user["user"]["profile"]["image_192"]
+
+    host_pfp = get_cachet_pfp(user["user"]["id"])
 
     raw_description_string = json.dumps(
         {

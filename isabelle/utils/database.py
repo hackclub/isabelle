@@ -4,6 +4,7 @@ import uuid
 import json
 from urllib.parse import quote
 
+from isabelle.utils.utils import get_cachet_pfp
 from isabelle.tables import Event
 
 
@@ -18,7 +19,7 @@ class DatabaseService:
         end_time: datetime,
         leader_slack_id: str,
         leader_name: str,
-        avatar_url: str,
+        avatar_url: Optional[str] = None,
         event_link: Optional[str] = None,
         approved: bool = False,
     ) -> Optional[Event]:
@@ -36,7 +37,7 @@ class DatabaseService:
             EndTime=end_time,
             LeaderSlackID=leader_slack_id,
             Leader=leader_name,
-            Avatar=avatar_url,
+            Avatar=avatar_url or get_cachet_pfp(leader_slack_id),
             EventLink=event_link or "https://app.slack.com/huddle/T0266FRGM/C01D7AHKMPF",
             Approved=approved,
             Cancelled=False,
