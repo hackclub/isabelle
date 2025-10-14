@@ -21,7 +21,7 @@ async def handle_approve_event_btn(ack: Callable, body: dict[str, Any], client: 
 
     value = body["actions"][0]["value"]
 
-    event = env.airtable.get_event(value)
+    event = await env.database.get_event(value)
 
     if not event:
         await client.chat_postEphemeral(
@@ -31,7 +31,7 @@ async def handle_approve_event_btn(ack: Callable, body: dict[str, Any], client: 
         )
         return
 
-    if event["fields"].get("Approved", False):
+    if event["Approved"]:
         await client.chat_postEphemeral(
             user=body["user"]["id"],
             channel=body["user"]["id"],
@@ -39,17 +39,17 @@ async def handle_approve_event_btn(ack: Callable, body: dict[str, Any], client: 
         )
         return
 
-    event = env.airtable.update_event(value, **{"Approved": True})
+    event = await env.database.update_event(value, **{"Approved": True})
 
     await client.chat_postMessage(
         user=body["user"]["id"],
         channel=env.slack_approval_channel,
-        text=f"<@{user_id}> approved {event['fields']['Title']} for <@{event['fields']['Leader Slack ID']}>.",
+        text=f"<@{user_id}> approved {event["Title"]} for <@{event["LeaderSlackID"]}>.",
     )
 
     await client.chat_postMessage(
-        channel=event["fields"]["Leader Slack ID"],
-        text=f"Your event {event['fields']['Title']} has been approved by <@{user_id}>! Please reach out to them if you have any questions or need help.",
+        channel=event["LeaderSlackID"],
+        text=f"Your event {event["Title"]} has been approved by <@{user_id}>! Please reach out to them if you have any questions or need help.",
     )
 
     await client.views_publish(user_id=user_id, view=await get_home(user_id, client))

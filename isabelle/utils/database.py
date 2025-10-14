@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 from typing import List, Optional, Dict
 import uuid
 import json
+from urllib.parse import quote
 
 from isabelle.tables import Event
 
@@ -19,8 +20,8 @@ class DatabaseService:
         leader_name: str,
         avatar_url: str,
         event_link: Optional[str] = None,
-        approved: bool = False
-    ) -> Event:
+        approved: bool = False,
+    ) -> Optional[Event]:
         
         raw_description_json = json.dumps({
             "type": "rich_text",
@@ -45,16 +46,25 @@ class DatabaseService:
             Sent1HourReminder=False,
             SentStartingReminder=False,
             HasHappened=False,
-            AMA=False
+            AMA=False,
+            Calculation=title.lower().replace(" ", "-").replace(":",""), # copied from the airtable formula
+            CalendarLink=make_google_calendar_url(title=title,description=description,end=end_time,event_link=event_link,leader=leader_name,start=start_time)
         )
+
+        try: 
+            print("Trying to insert event ", title)
+            await Event.insert(event)
+        except Exception as e:
+            print("Error creating event",e)
+            return None
+        print("Event created successfully")
         
-        await event.save()
         return event
     
     async def get_event(self, event_id: str) -> Optional[Event]:
         try:
             event_uuid = uuid.UUID(event_id)
-            return await Event.objects().where(Event.id == event_uuid).first()
+            return await Event.select().where(Event.id == event_uuid).first()
         except (ValueError, TypeError):
             return None
     
@@ -67,7 +77,7 @@ class DatabaseService:
         return await query.order_by(Event.StartTime)
     
     async def get_upcoming_events(self, include_unapproved: bool = False) -> List[Event]:
-        now = datetime.now(timezone.utc)
+        now = datetime.now()
         query = Event.select().where(
             Event.StartTime > now,
             Event.Cancelled == False
@@ -83,8 +93,9 @@ class DatabaseService:
         try:
             event_uuid = uuid.UUID(event_id) 
             await Event.update(**updates).where(Event.id == event_uuid)
-            return await Event.objects().where(Event.id == event_uuid).first()
-        except (ValueError, TypeError):
+            return await Event.select().where(Event.id == event_uuid).first()
+        except (ValueError, TypeError) as e:
+            print(e)
             return None
     
     async def approve_event(self, event_id: str) -> Optional[Event]:
@@ -139,3 +150,16 @@ class DatabaseService:
 
         return event or None
 
+
+
+
+def make_google_calendar_url(title, description, leader, event_link, start, end):
+    s = start.strftime("%Y%m%dT%H%M00Z")
+    e = end.strftime("%Y%m%dT%H%M00Z")
+    return (
+        "https://www.google.com/calendar/render?action=TEMPLATE"
+        f"&text={quote(title)}"
+        f"&details={quote(f'{description}\\nHack Club Event by {leader}')}"
+        f"&location={quote(event_link)}"
+        f"&dates={s}%2F{e}"
+    )

@@ -9,7 +9,7 @@ ZWSP = "\u200b"
 
 
 async def user_in_safehouse(user_id: str):
-    sad_members = await client.conversations_members(channel=env.slack_sad_channel)["members"]
+    sad_members = (await client.conversations_members(channel=env.slack_sad_channel))["members"]
     return user_id in sad_members
 
 

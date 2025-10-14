@@ -20,7 +20,7 @@ async def send_reminder(
         pass
         email_addr = client.users_info(user=user_id)["user"]["profile"]["email"]
         env.mailer.send_email(
-            email_addr, f"{event['fields']['Title']} Reminder!", message
+            email_addr, f"{event["Title"]} Reminder!", message
         )
 
 
@@ -29,10 +29,10 @@ def check_rsvps():
     events = env.airtable.get_upcoming_events()
 
     for event in events:
-        if not event["fields"].get("Approved", False):
+        if not event["Approved"]:
             continue
         start_time = datetime.fromisoformat(event["fields"]["Start Time"]).timestamp()
-        rsvps = env.airtable.get_rsvps_from_event(event["id"])
+        rsvps = env.airtable.get_rsvps_from_event(str(event["id"]))
 
         # Handle 1 day reminders
         if start_time - time.time() <= 86400 and not event["fields"].get(
@@ -41,10 +41,10 @@ def check_rsvps():
             for user in rsvps:
                 send_reminder(
                     user["fields"]["Slack ID"],
-                    f"Hey! Just a reminder that {event['fields']['Title']} run by {event['fields']['Leader']} is tomorrow! Hope to see you there!",
+                    f"Hey! Just a reminder that {event["Title"]} run by {event["Leader"]} is tomorrow! Hope to see you there!",
                     event,
                 )
-            env.airtable.update_event(event["id"], **{"Sent 1 Day Reminder": True})
+            env.airtable.update_event(str(event["id"]), **{"Sent 1 Day Reminder": True})
 
         # Handle 1 hour reminders
         elif start_time - time.time() <= 3600 and not event["fields"].get(
@@ -53,10 +53,10 @@ def check_rsvps():
             for user in rsvps:
                 send_reminder(
                     user["fields"]["Slack ID"],
-                    f"Hey! Just a reminder that {event['fields']['Title']} run by {event['fields']['Leader']} starts in 1 hour! Hope to see you there!\nYou can join the event at {event['fields'].get('Event Link', 'the Slack!')}",
+                    f"Hey! Just a reminder that {event["Title"]} run by {event["Leader"]} starts in 1 hour! Hope to see you there!\nYou can join the event at {event['fields'].get('Event Link', 'the Slack!')}",
                     event,
                 )
-            env.airtable.update_event(event["id"], **{"Sent 1 Hour Reminder": True})
+            env.airtable.update_event(str(event["id"]), **{"Sent 1 Hour Reminder": True})
 
         elif start_time - time.time() <= 0 and not event["fields"].get(
             "Sent Starting Reminder", False
@@ -64,11 +64,11 @@ def check_rsvps():
             for user in rsvps:
                 send_reminder(
                     user["fields"]["Slack ID"],
-                    f"Hey! Just a reminder that {event['fields']['Title']} run by {event['fields']['Leader']} has started!\nYou can join the event at {event['fields'].get('Event Link', 'the Slack!')}\nHope you enjoy it!",
+                    f"Hey! Just a reminder that {event["Title"]} run by {event["Leader"]} has started!\nYou can join the event at {event['fields'].get('Event Link', 'the Slack!')}\nHope you enjoy it!",
                     event,
                     email=True,
                 )
-            env.airtable.update_event(event["id"], **{"Sent Starting Reminder": True})
+            env.airtable.update_event(str(event["id"]), **{"Sent Starting Reminder": True})
 
 def check_rsvps_in_thread():
     thread = Thread(target=check_rsvps)

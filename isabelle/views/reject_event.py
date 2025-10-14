@@ -1,8 +1,8 @@
 from isabelle.utils.env import env
 
 
-def get_reject_event_modal(event_id: str):
-    event = env.airtable.get_event(event_id)
+async def get_reject_event_modal(event_id: str):
+    event = await env.database.get_event(event_id)
     if not event:
         return {
             "type": "modal",
@@ -31,7 +31,7 @@ def get_reject_event_modal(event_id: str):
                 "element": {"type": "rich_text_input", "action_id": "message"},
                 "label": {
                     "type": "plain_text",
-                    "text": f'Why are you rejecting "{event["fields"]["Title"]}"?',
+                    "text": f'Why are you rejecting "{event["Title"]}"?',
                     "emoji": True,
                 },
             }

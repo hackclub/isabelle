@@ -10,6 +10,7 @@ from isabelle.utils.env import env
 from isabelle.utils.utils import rich_text_to_md
 from isabelle.utils.utils import rich_text_to_mrkdwn
 from isabelle.views.app_home import get_home
+from datetime import datetime
 
 
 async def handle_create_event_view(ack: Callable, body: dict[str, Any], client: AsyncWebClient):
@@ -19,8 +20,8 @@ async def handle_create_event_view(ack: Callable, body: dict[str, Any], client: 
     title = (values["title"]["title"]["value"],)
     description = values["description"]["description"]["rich_text_value"]["elements"]
     md = rich_text_to_md(description)
-    start_time = (values["start_time"]["start_time"]["selected_date_time"],)
-    end_time = (values["end_time"]["end_time"]["selected_date_time"],)
+    start_time = datetime.fromtimestamp(values["start_time"]["start_time"]["selected_date_time"])
+    end_time = datetime.fromtimestamp(values["end_time"]["end_time"]["selected_date_time"])
     host_id = values["host"]["host"]["selected_user"]
     location = (
         values.get("location", {}).get("location", {}).get("value")
@@ -31,16 +32,18 @@ async def handle_create_event_view(ack: Callable, body: dict[str, Any], client: 
     host_name = user["user"]["real_name"]
     host_pfp = user["user"]["profile"]["image_192"]
 
-    event = env.airtable.create_event(
-        title[0],
-        md,
-        description,
-        start_time[0],
-        end_time[0],
-        location,
-        host_id,
-        host_name,
-        host_pfp,
+
+    print(end_time)
+    event = await env.database.create_event(
+        title=title[0],
+        description=md,
+        raw_description=description,
+        start_time=start_time,
+        end_time=end_time,
+        leader_slack_id=host_id,
+        leader_name=host_name,
+        avatar_url=host_pfp,
+        event_link=location
     )
     if not event:
         await client.chat_postEphemeral(
@@ -48,16 +51,15 @@ async def handle_create_event_view(ack: Callable, body: dict[str, Any], client: 
             channel=body["user"]["id"],
             text=f'An error occurred whilst creating the event "{title[0]}".',
         )
+        return
 
-    fallback_start_time = datetime.fromtimestamp(
-        start_time[0], timezone.utc
-    ).isoformat()
-    fallback_end_time = datetime.fromtimestamp(end_time[0], timezone.utc).isoformat()
+    fallback_start_time = start_time.isoformat()
+    fallback_end_time = end_time.isoformat()
 
     user_id = body.get("user", {}).get("id", "")
     host_mention = f"for <@{host_id}>" if host_id != user_id else ""
     host_str = f"<@{user_id}> {host_mention}"
-    rich_text = json.loads(event["fields"]["Raw Description"])
+    rich_text = json.loads(event["RawDescription"])
     mrkdwn = rich_text_to_mrkdwn(rich_text)
     await client.chat_postMessage(
         channel=env.slack_approval_channel,

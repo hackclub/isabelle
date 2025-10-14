@@ -23,6 +23,6 @@ async def handle_reject_event_btn(ack: Callable, body: dict[str, Any], client: A
 
     await client.views_open(
         user_id=user_id,
-        view=get_reject_event_modal(event_id),
+        view=await get_reject_event_modal(event_id),
         trigger_id=body["trigger_id"],
     )

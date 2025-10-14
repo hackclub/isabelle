@@ -22,59 +22,61 @@ async def get_home(user_id: str, client: AsyncWebClient):
     admin = True if user_id in env.authorised_users or ws_admin else False
     # airtable_user = env.airtable.get_user(user_id)
 
-    events = env.airtable.get_all_events(unapproved=True)
+    events = await env.database.get_all_events(include_unapproved=True)
+
+    print(events)
     upcoming_events = [
         event
         for event in events
-        if datetime.fromisoformat(event["fields"]["Start Time"])
-        > datetime.now(timezone.utc)
+        if event["StartTime"]
+        > datetime.now()
     ]
     current_events = [
         event
         for event in events
-        if datetime.now(timezone.utc)
-        < datetime.fromisoformat(event["fields"]["End Time"])
-        and datetime.now(timezone.utc)
-        > datetime.fromisoformat(event["fields"]["Start Time"])
+        if datetime.now()
+        < event.get("EndTime")
+        and datetime.now()
+        > event["StartTime"]
     ]
 
     current_events_blocks = []
     for event in current_events:
-        if not event["fields"].get("Approved", False) and (
-            not event["fields"].get("Leader Slack ID", "") == user_id
+        if not event["Approved"] and (
+            not event["LeaderSlackID"] == user_id
             and not sad_member
             and not admin
         ):
             continue
         current_events_blocks.append({"type": "divider"})
-        fallback_time = datetime.fromisoformat(event["fields"]["End Time"]).strftime(
+        fallback_time = event["EndTime"].strftime(
             "Ends at %I:%M %p"
         )
-        formatted_time = f"<!date^{int(datetime.fromisoformat(event['fields']['End Time']).timestamp())}^Ends at {{time}}|{fallback_time}>"
-        rich_text = json.loads(event["fields"]["Raw Description"])
+        formatted_time = f"<!date^{int(event["EndTime"].timestamp())}^Ends at {{time}}|{fallback_time}>"
+        rich_text = json.loads(event["RawDescription"])
         mrkdwn = rich_text_to_mrkdwn(rich_text["elements"])
         current_events_blocks.append(
             {
                 "type": "section",
                 "text": {
                     "type": "mrkdwn",
-                    "text": f"{'*[UNAPPROVED]:* ' if not event['fields'].get('Approved', False) else ''}*{event['fields']['Title']}* - <@{event['fields']['Leader Slack ID']}>\n{mrkdwn}\n*{formatted_time}*",
+                    "text": f"{'*[UNAPPROVED]:* ' if not event["Approved"] else ''}*{event["Title"]}* - <@{event["LeaderSlackID"]}>\n{mrkdwn}\n*{formatted_time}*",
                 },
                 "accessory": {
                     "type": "image",
-                    "image_url": event["fields"]["Avatar"][0]["url"],
-                    "alt_text": f"{event['fields']['Leader']} profile picture",
+                    "image_url": event["Avatar"],
+                    "alt_text": f"{event["Leader"]} profile picture",
                 },
             }
         )
         buttons = []
-        if admin and not event["fields"].get("Approved", False):
+        if admin and not event["Approved"]:
             buttons.append(
                 {
                     "type": "button",
                     "text": {"type": "plain_text", "text": "Approve", "emoji": True},
                     "style": "primary",
-                    "value": event["id"],
+                    "value": str(event["id"]),
                     "action_id": "approve-event",
                 }
             )
@@ -83,7 +85,7 @@ async def get_home(user_id: str, client: AsyncWebClient):
                     "type": "button",
                     "text": {"type": "plain_text", "text": "Reject", "emoji": True},
                     "style": "danger",
-                    "value": event["id"],
+                    "value": str(event["id"]),
                     "action_id": "reject-event",
                 }
             )
@@ -93,21 +95,19 @@ async def get_home(user_id: str, client: AsyncWebClient):
                 "text": {"type": "plain_text", "text": "Join!", "emoji": True},
                 "value": "join",
                 "style": "primary",
-                "url": event["fields"].get(
-                    "Event Link", "https://app.slack.com/huddle/T0266FRGM/C01D7AHKMPF"
-                ),  # Default to #community huddle
+                "url": event["EventLink"],  # Defaults to #community huddle
             }
         )
-        if user_id == event["fields"]["Leader Slack ID"] or admin:
+        if user_id == event["LeaderSlackID"] or admin:
             buttons.append(
                 {
                     "type": "button",
                     "text": {"type": "plain_text", "text": "Edit", "emoji": True},
-                    "value": event["id"],
+                    "value": str(event["id"]),
                     "action_id": "edit-event",
                 }
             )
-        # if event["fields"].get("Approved", False):
+        # if event["Approved"]:
         #     buttons.append(
         #         {
         #             "type": "button",
@@ -120,41 +120,41 @@ async def get_home(user_id: str, client: AsyncWebClient):
 
     upcoming_events_blocks = []
     for event in upcoming_events:
-        if not event["fields"].get("Approved", False) and (
-            not event["fields"].get("Leader Slack ID", "") == user_id
+        if not event["Approved"] and (
+            not event["LeaderSlackID"] == user_id
             and not sad_member
             and not admin
         ):
             continue
         upcoming_events_blocks.append({"type": "divider"})
-        fallback_time = datetime.fromisoformat(event["fields"]["Start Time"]).strftime(
+        fallback_time = event["StartTime"].strftime(
             "%A, %B %d at %I:%M %p"
         )
-        formatted_time = f"<!date^{int(datetime.fromisoformat(event['fields']['Start Time']).timestamp())}^{{date_long_pretty}} at {{time}}|{fallback_time}>"
-        rich_text = json.loads(event["fields"]["Raw Description"])
+        formatted_time = f"<!date^{int(event["StartTime"].timestamp())}^{{date_long_pretty}} at {{time}}|{fallback_time}>"
+        rich_text = json.loads(event["RawDescription"])
         mrkdwn = rich_text_to_mrkdwn(rich_text["elements"])
         upcoming_events_blocks.append(
             {
                 "type": "section",
                 "text": {
                     "type": "mrkdwn",
-                    "text": f"{'*[UNAPPROVED]:* ' if not event['fields'].get('Approved', False) else ''}*{event['fields']['Title']}* - <@{event['fields']['Leader Slack ID']}>\n{mrkdwn}\n*{formatted_time}*",
+                    "text": f"{'*[UNAPPROVED]:* ' if not event["Approved"] else ''}*{event["Title"]}* - <@{event["LeaderSlackID"]}>\n{mrkdwn}\n*{formatted_time}*",
                 },
                 "accessory": {
                     "type": "image",
-                    "image_url": event["fields"]["Avatar"][0]["url"],
-                    "alt_text": f"{event['fields']['Leader']} profile picture",
+                    "image_url": event["Avatar"],
+                    "alt_text": f"{event["Leader"]} profile picture",
                 },
             }
         )
         buttons = []
-        if admin and not event["fields"].get("Approved", False):
+        if admin and not event["Approved"]:
             buttons.append(
                 {
                     "type": "button",
                     "text": {"type": "plain_text", "text": "Approve", "emoji": True},
                     "style": "primary",
-                    "value": event["id"],
+                    "value": str(event["id"]),
                     "action_id": "approve-event",
                 }
             )
@@ -163,16 +163,16 @@ async def get_home(user_id: str, client: AsyncWebClient):
                     "type": "button",
                     "text": {"type": "plain_text", "text": "Reject", "emoji": True},
                     "style": "danger",
-                    "value": event["id"],
+                    "value": str(event["id"]),
                     "action_id": "reject-event",
                 }
             )
-        if user_id == event["fields"]["Leader Slack ID"] or admin:
+        if user_id == event["LeaderSlackID"] or admin:
             buttons.append(
                 {
                     "type": "button",
                     "text": {"type": "plain_text", "text": "Edit", "emoji": True},
-                    "value": event["id"],
+                    "value": str(event["id"]),
                     "action_id": "edit-event",
                 }
             )
@@ -195,12 +195,12 @@ async def get_home(user_id: str, client: AsyncWebClient):
         #     {
         #         "type": "button",
         #         "text": {"type": "plain_text", "text": text, "emoji": True},
-        #         "value": event["id"],
+        #         "value": str(event["id"]),
         #         "action_id": "rsvp",
         #         **style_dict,
         #     }
         # )
-        if event["fields"].get("Approved", False):
+        if event["Approved"]:
             # buttons.append(
             #     {
             #         "type": "button",
@@ -217,7 +217,7 @@ async def get_home(user_id: str, client: AsyncWebClient):
                         "text": "Add to GCal",
                         "emoji": True,
                     },
-                    "url": event["fields"]["Calendar Link"],
+                    "url": event["CalendarLink"],
                     "action_id": "add-to-gcal",
                 }
             )

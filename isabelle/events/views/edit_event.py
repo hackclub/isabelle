@@ -29,6 +29,7 @@ async def handle_edit_event_view(ack: Callable, body: dict[str, Any], client: As
 
     user = await client.users_info(user=host_id)
     host_name = user["user"]["real_name"]
+    # TODO: Use cachet
     host_pfp = user["user"]["profile"]["image_192"]
 
     raw_description_string = json.dumps(
@@ -38,20 +39,20 @@ async def handle_edit_event_view(ack: Callable, body: dict[str, Any], client: As
         }
     )
 
-    event = env.airtable.update_event(
-        id=body["view"]["private_metadata"],
+    event = await env.database.update_event(
+        event_id=body["view"]["private_metadata"],
         **{
             "Title": title[0],
             "Description": md,
-            "Raw Description": raw_description_string,
-            "Start Time": datetime.fromtimestamp(
-                start_time[0], timezone.utc
-            ).isoformat(),
-            "End Time": datetime.fromtimestamp(end_time[0], timezone.utc).isoformat(),
-            "Event Link": location,
-            "Leader Slack ID": host_id,
+            "RawDescription": raw_description_string,
+            "StartTime": datetime.fromtimestamp(
+                start_time[0]
+            ),
+            "EndTime": datetime.fromtimestamp(end_time[0]),
+            "EventLink": location,
+            "LeaderSlackID": host_id,
             "Leader": host_name,
-            "Avatar": [{"url": host_pfp}],
+            "Avatar": host_pfp,
         },
     )
     if not event:
