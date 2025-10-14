@@ -13,6 +13,7 @@ from isabelle.piccolo_app import APP_CONFIG
 from isabelle.tables import Event
 from slack_bolt.adapter.starlette.async_handler import AsyncSlackRequestHandler
 from isabelle.utils.slack import app 
+from isabelle.utils import rsvp_checker
 
 
 async def open_database_connection_pool():
@@ -34,6 +35,7 @@ async def close_database_connection_pool():
 @asynccontextmanager
 async def lifespan(app: Starlette):
     await open_database_connection_pool()
+    rsvp_checker.init()
     yield
     await close_database_connection_pool()
 
