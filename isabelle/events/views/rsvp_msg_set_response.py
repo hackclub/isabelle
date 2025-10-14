@@ -17,7 +17,20 @@ async def handle_rsvp_msg_set_response(ack: callable, body, view, client: AsyncW
         print("Error reacting@handle_rsvp_msg_set_response ",e)
         pass
 
-    env.airtable.set_rsvp_msg(chosen_event_id, message_ts, channel_id, emoji_name)
+    ev = await env.database.set_rsvp_msg(chosen_event_id, message_ts, channel_id, emoji_name)
+
+    if ev and ev.get("rsvpMsg","") is not "":
+        await client.chat_postEphemeral(
+            channel=channel_id,
+            user=body["user"]["id"],
+            text="Successfully set RSVP message for the event."
+        )
+    else:
+        await client.chat_postEphemeral(
+            channel=channel_id,
+            user=body["user"]["id"],
+            text="Error setting RSVP message for the event."
+        )
 
     pass
 

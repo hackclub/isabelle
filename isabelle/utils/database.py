@@ -131,7 +131,7 @@ class DatabaseService:
                 InterestCount=len(interested_users)
             ).where(Event.id == event_uuid)
             
-            return await Event.objects().where(Event.id == event_uuid).first()
+            return await Event.select().where(Event.id == event_uuid).first()
         except (ValueError, TypeError):
             return None
     
@@ -154,7 +154,11 @@ class DatabaseService:
 
         return event or None
 
-
+    async def set_rsvp_msg(self, event_id: str, message_ts: str, channel_id:str, emoji: Optional[str]) -> Optional[Event]:
+        e = emoji or "any"
+        if type(message_ts) is not str or type(channel_id) is not str:
+            raise Exception("invalid message ts or channel id")
+        return await self.update_event(event_id=event_id, **{"rsvpMsg":f"{message_ts}/{channel_id}/{e}"})
 
 
 def make_google_calendar_url(title, description, leader, event_link, start, end):

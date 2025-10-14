@@ -18,8 +18,8 @@ async def handle_set_rsvp_msg(ack, shortcut,body, client: AsyncWebClient):
         )
         return
     
-    upcoming_events = env.airtable.get_upcoming_events()
-    upcoming_events = list(map(lambda x: (x["fields"]["Title"], x["id"]), upcoming_events))
+    upcoming_events = await env.database.get_upcoming_events()
+    upcoming_events = list(map(lambda x: (x["Title"], str(x["id"])), upcoming_events))
     upcoming_events = list(map(lambda x: Option(x[0],x[1]), upcoming_events))
     if len(upcoming_events) == 0:
         upcoming_events = [Option("No upcoming events", "none")]
