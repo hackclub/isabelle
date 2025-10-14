@@ -28,7 +28,6 @@ async def handle_edit_event_view(ack: Callable, body: dict[str, Any], client: As
 
     user = await client.users_info(user=host_id)
     host_name = user["user"]["real_name"]
-    # TODO: Use cachet
 
     host_pfp = get_cachet_pfp(user["user"]["id"])
 
