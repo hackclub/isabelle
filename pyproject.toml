@@ -9,7 +9,6 @@ dependencies = [
     "blockkit>=2.0.4",
     "piccolo-admin>=1.12.0",
     "piccolo[postgres]>=1.28.0",
-    "pyairtable>=3.0.2",
     "python-dotenv>=1.0.1",
     "requests>=2.32.3",
     "schedule>=1.2.2",
