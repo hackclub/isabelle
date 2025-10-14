@@ -1,3 +1,5 @@
+# ATTENTION
+# This entry point is now only for the slack app development. The whole app entrypoint is in /main.py now
 import sentry_sdk
 from slack_bolt.adapter.socket_mode import SocketModeHandler
 

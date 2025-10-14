@@ -1,87 +1,92 @@
 import time
 from datetime import datetime
 from typing import Any
-from threading import Thread
+import asyncio
 
-
-import schedule
-from slack_sdk import WebClient
+from slack_sdk.web.async_client import AsyncWebClient
 
 from .env import env
 
-client = WebClient(token=env.slack_bot_token)
+client = AsyncWebClient(token=env.slack_bot_token)
 
 
-def send_reminder(
+async def send_reminder(
     user_id: str, message: str, event: dict[str, Any], email: bool = False
 ):
-    client.chat_postMessage(channel=user_id, text=message)
+    await client.chat_postMessage(channel=user_id, text=message)
     if email and env.mailer:
         pass
-        email_addr = client.users_info(user=user_id)["user"]["profile"]["email"]
+        info = await client.users_info(user=user_id)
+        email_addr = info["user"]["profile"]["email"]
         env.mailer.send_email(
-            email_addr, f"{event['fields']['Title']} Reminder!", message
+            email_addr, f"{event['Title']} Reminder!", message
         )
 
 
-def check_rsvps():
-    print("Checking rspvs, its", time.time())
-    events = env.airtable.get_upcoming_events()
+async def check_rsvps():
+    print("Checking rspvs async, its", time.time())
+    events = await env.database.get_upcoming_events()
 
     for event in events:
-        if not event["fields"].get("Approved", False):
+        if not event["Approved"]:
             continue
-        start_time = datetime.fromisoformat(event["fields"]["Start Time"]).timestamp()
-        rsvps = env.airtable.get_rsvps_from_event(event["id"])
+        start_time = event["StartTime"].timestamp()
+        rsvps = event["InterestedUsers"]
 
         # Handle 1 day reminders
-        if start_time - time.time() <= 86400 and not event["fields"].get(
-            "Sent 1 Day Reminder", False
+        if start_time - time.time() <= 86400 and not event.get(
+            "Sent1DayReminder", False
         ):
             for user in rsvps:
-                send_reminder(
-                    user["fields"]["Slack ID"],
-                    f"Hey! Just a reminder that {event['fields']['Title']} run by {event['fields']['Leader']} is tomorrow! Hope to see you there!",
+                await send_reminder(
+                    user,
+                    f"Hey! Just a reminder that {event['Title']} run by {event['Leader']} is tomorrow! Hope to see you there!",
                     event,
                 )
-            env.airtable.update_event(event["id"], **{"Sent 1 Day Reminder": True})
+            await env.database.update_event(str(event["id"]), **{"Sent1DayReminder": True})
 
         # Handle 1 hour reminders
-        elif start_time - time.time() <= 3600 and not event["fields"].get(
-            "Sent 1 Hour Reminder", False
+        elif start_time - time.time() <= 3600 and not event.get(
+            "Sent1HourReminder", False
         ):
             for user in rsvps:
-                send_reminder(
-                    user["fields"]["Slack ID"],
-                    f"Hey! Just a reminder that {event['fields']['Title']} run by {event['fields']['Leader']} starts in 1 hour! Hope to see you there!\nYou can join the event at {event['fields'].get('Event Link', 'the Slack!')}",
+                await send_reminder(
+                    user,
+                    f"Hey! Just a reminder that {event['Title']} run by {event['Leader']} starts in 1 hour! Hope to see you there!\nYou can join the event at {event.get('EventLink', 'the Slack!')}",
                     event,
                 )
-            env.airtable.update_event(event["id"], **{"Sent 1 Hour Reminder": True})
+            await env.database.update_event(str(event["id"]), **{"Sent1HourReminder": True})
 
-        elif start_time - time.time() <= 0 and not event["fields"].get(
-            "Sent Starting Reminder", False
+        elif start_time - time.time() <= 0 and not event.get(
+            "SentStartingReminder", True
         ):
+            pass
             for user in rsvps:
-                send_reminder(
-                    user["fields"]["Slack ID"],
-                    f"Hey! Just a reminder that {event['fields']['Title']} run by {event['fields']['Leader']} has started!\nYou can join the event at {event['fields'].get('Event Link', 'the Slack!')}\nHope you enjoy it!",
+                await send_reminder(
+                    user,
+                    f"Hey! Just a reminder that {event['Title']} run by {event['Leader']} has started!\nYou can join the event at {event.get('EventLink', 'the Slack!')}\nHope you enjoy it!",
                     event,
                     email=True,
                 )
-            env.airtable.update_event(event["id"], **{"Sent Starting Reminder": True})
+            await env.database.update_event(str(event["id"]), **{"SentStartingReminder": True})
 
-def check_rsvps_in_thread():
-    thread = Thread(target=check_rsvps)
-    thread.start()
+
+async def rsvp_worker(interval_seconds = 60):
+    while True:
+        try:
+            await check_rsvps()
+        except Exception as e:
+            print("rsvp_worker error:", repr(e))
+        await asyncio.sleep(interval_seconds)
+
 
 def init():
-    schedule.every().minute.do(check_rsvps_in_thread)
+    try:
+        loop = asyncio.get_running_loop() 
+    except RuntimeError:
+        raise RuntimeError(
+            "rsvp_checker.init() must be called from within a running asyncio loop."
+        )
+    loop.create_task(check_rsvps())   # check at startup
+    loop.create_task(rsvp_worker())   # periodic worker
     print("Initialized RSVP checker")
-    rsvp_thread = Thread(target=rsvp_checker, daemon=True)
-    rsvp_thread.start()
-
-
-def rsvp_checker():
-    while True:        
-        schedule.run_pending()
-        time.sleep(1)

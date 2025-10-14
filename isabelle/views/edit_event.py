@@ -4,9 +4,9 @@ from datetime import datetime
 from isabelle.utils.env import env
 
 
-def get_edit_event_modal(event_id: str):
-    event = env.airtable.get_event(event_id)
-    raw_desc = json.loads(event["fields"]["Raw Description"])
+async def get_edit_event_modal(event_id: str):
+    event = await env.database.get_event(event_id)
+    raw_desc = json.loads(event["RawDescription"])
     return {
         "type": "modal",
         "callback_id": "edit_event",
@@ -29,7 +29,7 @@ def get_edit_event_modal(event_id: str):
                 "element": {
                     "type": "plain_text_input",
                     "action_id": "title",
-                    "initial_value": event["fields"]["Title"],
+                    "initial_value": event["Title"],
                 },
                 "label": {"type": "plain_text", "text": "Title", "emoji": True},
             },
@@ -49,9 +49,9 @@ def get_edit_event_modal(event_id: str):
                 "element": {
                     "type": "datetimepicker",
                     "action_id": "start_time",
-                    "initial_date_time": datetime.fromisoformat(
-                        event["fields"]["Start Time"]
-                    ).timestamp(),
+                    "initial_date_time": 
+                        event["StartTime"]
+                    .timestamp(),
                 },
                 "label": {"type": "plain_text", "text": "Start Time", "emoji": True},
             },
@@ -61,9 +61,9 @@ def get_edit_event_modal(event_id: str):
                 "element": {
                     "type": "datetimepicker",
                     "action_id": "end_time",
-                    "initial_date_time": datetime.fromisoformat(
-                        event["fields"]["End Time"]
-                    ).timestamp(),
+                    "initial_date_time": 
+                        event["EndTime"]
+                    .timestamp(),
                 },
                 "label": {"type": "plain_text", "text": "End Time", "emoji": True},
             },
@@ -77,7 +77,7 @@ def get_edit_event_modal(event_id: str):
                         "text": "Select a host",
                         "emoji": True,
                     },
-                    "initial_user": event["fields"]["Leader Slack ID"],
+                    "initial_user": event["LeaderSlackID"],
                     "action_id": "host",
                 },
                 "label": {"type": "plain_text", "text": "Host", "emoji": True},
@@ -88,7 +88,7 @@ def get_edit_event_modal(event_id: str):
                 "element": {
                     "type": "plain_text_input",
                     "action_id": "location",
-                    "initial_value": event["fields"].get("Event Link")
+                    "initial_value": event.get("EventLink")
                 },
                 "label": {"type":"plain_text", "text": "Event Location (URL)", "emoji": True}
             }

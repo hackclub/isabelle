@@ -1,13 +1,14 @@
-from slack_sdk import WebClient
+from slack_sdk.web.async_client import AsyncWebClient
 from isabelle.utils.env import env
-def handle_rsvp_msg_set_response(ack: callable, body, view, client: WebClient):
-    ack()
+
+async def handle_rsvp_msg_set_response(ack: callable, body, view, client: AsyncWebClient):
+    await ack()
 
     emoji_name = extract_emoji_name(view)
     chosen_event_id = view["state"]["values"]["chosen_event"]["event_select"]["selected_option"]["value"]
     (message_ts, channel_id) = tuple(view["private_metadata"].split("-"))
     try:
-        client.reactions_add(
+        await client.reactions_add(
             channel=channel_id,
             timestamp=message_ts,
             name=emoji_name
@@ -16,7 +17,20 @@ def handle_rsvp_msg_set_response(ack: callable, body, view, client: WebClient):
         print("Error reacting@handle_rsvp_msg_set_response ",e)
         pass
 
-    env.airtable.set_rsvp_msg(chosen_event_id, message_ts, channel_id, emoji_name)
+    ev = await env.database.set_rsvp_msg(chosen_event_id, message_ts, channel_id, emoji_name)
+
+    if ev and ev.get("rsvpMsg","") is not "":
+        await client.chat_postEphemeral(
+            channel=channel_id,
+            user=body["user"]["id"],
+            text="Successfully set RSVP message for the event."
+        )
+    else:
+        await client.chat_postEphemeral(
+            channel=channel_id,
+            user=body["user"]["id"],
+            text="Error setting RSVP message for the event."
+        )
 
     pass
 

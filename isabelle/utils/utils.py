@@ -1,15 +1,15 @@
 import re
 
-from slack_sdk import WebClient
+from slack_sdk.web.async_client import AsyncWebClient
 
 from isabelle.utils.env import env
 
-client = WebClient(token=env.slack_bot_token)
+client = AsyncWebClient(token=env.slack_bot_token)
 ZWSP = "\u200b"
 
 
-def user_in_safehouse(user_id: str):
-    sad_members = client.conversations_members(channel=env.slack_sad_channel)["members"]
+async def user_in_safehouse(user_id: str):
+    sad_members = (await client.conversations_members(channel=env.slack_sad_channel))["members"]
     return user_id in sad_members
 
 

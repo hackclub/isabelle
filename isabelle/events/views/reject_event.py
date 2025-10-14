@@ -2,48 +2,49 @@ import json
 from typing import Any
 from typing import Callable
 
-from slack_sdk import WebClient
+from slack_sdk.web.async_client import AsyncWebClient
 
 from isabelle.utils.env import env
 
 
-def handle_reject_event_view(ack: Callable, body: dict[str, Any], client: WebClient):
-    ack()
+async def handle_reject_event_view(ack: Callable, body: dict[str, Any], client: AsyncWebClient):
+    await ack()
     view = body["view"]
     message = view["state"]["values"]["message"]["message"]["rich_text_value"]
     event_id = view["private_metadata"]
 
-    event = env.airtable.get_event(event_id)
+    event = await env.database.get_event(event_id)
+    print(event)
 
     if not event:
-        client.chat_postEphemeral(
+        await client.chat_postEphemeral(
             user=body["user"]["id"],
             channel=body["user"]["id"],
             text=f"Event with id `{event_id}` not found.",
         )
         return
 
-    if event["fields"].get("Canceled", False):
-        client.chat_postEphemeral(
+    if event.get("Cancelled", False):
+        await client.chat_postEphemeral(
             user=body["user"]["id"],
             channel=body["user"]["id"],
             text=f"Event with id `{event_id}` has already been rejected.",
         )
         return
 
-    event = env.airtable.update_event(
-        event_id, **{"Canceled": True, "Raw Cancelation Reason": json.dumps(message)}
+    event = await env.database.update_event(
+        event_id, **{"Cancelled": True, "RawCancellation": json.dumps(message)}
     )
 
-    client.chat_postMessage(
+    await client.chat_postMessage(
         channel=env.slack_approval_channel,
-        text=f"<@{body['user']['id']}> rejected {event['fields']['Title']} for <@{event['fields']['Leader Slack ID']}> with the following reason.",
+        text=f"<@{body['user']['id']}> rejected {event["Title"]} for <@{event["LeaderSlackID"]}> with the following reason.",
         blocks=[
             {
                 "type": "section",
                 "text": {
                     "type": "mrkdwn",
-                    "text": f"<@{body['user']['id']}> rejected {event['fields']['Title']} for <@{event['fields']['Leader Slack ID']}> with the following reason.",
+                    "text": f"<@{body['user']['id']}> rejected {event["Title"]} for <@{event["LeaderSlackID"]}> with the following reason.",
                 },
             },
             {
@@ -53,15 +54,15 @@ def handle_reject_event_view(ack: Callable, body: dict[str, Any], client: WebCli
         ],
     )
 
-    client.chat_postMessage(
-        channel=event["fields"]["Leader Slack ID"],
-        text=f"Your event {event['fields']['Title']} has been rejected by <@{body['user']['id']}> with the following reason. Please reach out to them if you have any questions or need help.",
+    await client.chat_postMessage(
+        channel=event["LeaderSlackID"],
+        text=f"Your event {event["Title"]} has been rejected by <@{body['user']['id']}> with the following reason. Please reach out to them if you have any questions or need help.",
         blocks=[
             {
                 "type": "section",
                 "text": {
                     "type": "mrkdwn",
-                    "text": f"Your event {event['fields']['Title']} has been rejected by <@{body['user']['id']}> :(\nPlease reach out to them if you have any questions or need help.",
+                    "text": f"Your event {event["Title"]} has been rejected by <@{body['user']['id']}> :(\nPlease reach out to them if you have any questions or need help.",
                 },
             },
             {

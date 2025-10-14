@@ -2,7 +2,7 @@ import os
 
 from dotenv import load_dotenv
 
-from isabelle.utils.airtable import AirtableManager
+from isabelle.utils.database import DatabaseService
 # from .email import Email
 
 load_dotenv()
@@ -32,11 +32,8 @@ class Environment:
         if not self.sentry_dsn and self.environemnt == "production":
             raise Exception("SENTRY_DSN is not set")
 
-        self.airtable = AirtableManager(
-            api_key=self.airtable_api_key,
-            base_id=self.airtable_base_id,
-            production=self.environemnt == "production",
-        )
+
+        self.database = DatabaseService()
 
         # self.mailer = Email(sender=google_username, password=google_password)
 
