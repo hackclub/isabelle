@@ -3,6 +3,7 @@ import os
 from dotenv import load_dotenv
 
 from isabelle.utils.airtable import AirtableManager
+from isabelle.utils.database import DatabaseService
 # from .email import Email
 
 load_dotenv()
@@ -37,6 +38,8 @@ class Environment:
             base_id=self.airtable_base_id,
             production=self.environemnt == "production",
         )
+
+        self.database = DatabaseService()
 
         # self.mailer = Email(sender=google_username, password=google_password)
 
