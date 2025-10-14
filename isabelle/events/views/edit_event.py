@@ -7,7 +7,8 @@ from typing import Callable
 from slack_sdk.web.async_client import AsyncWebClient
 
 from isabelle.utils.env import env
-from isabelle.utils.utils import rich_text_to_mrkdwn, get_cachet_pfp, rich_text_to_md
+from isabelle.utils.utils import rich_text_to_mrkdwn, rich_text_to_md
+from isabelle.utils.database import get_cachet_pfp
 from isabelle.views.app_home import get_home
 
 

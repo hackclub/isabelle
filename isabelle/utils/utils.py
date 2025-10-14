@@ -144,7 +144,3 @@ def rich_text_to_mrkdwn(data):
                 if "elements" in item:
                     mrkdwn += rich_text_to_mrkdwn(item["elements"])
     return mrkdwn
-
-
-def get_cachet_pfp(user_id:str) -> str:
-    return f"https://cachet.dunkirk.sh/users/{user_id}/r"

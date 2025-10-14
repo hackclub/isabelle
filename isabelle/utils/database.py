@@ -4,8 +4,11 @@ import uuid
 import json
 from urllib.parse import quote
 
-from isabelle.utils.utils import get_cachet_pfp
 from isabelle.tables import Event
+
+
+def get_cachet_pfp(user_id: str) -> str:
+    return f"https://cachet.dunkirk.sh/users/{user_id}/r"
 
 
 class DatabaseService:

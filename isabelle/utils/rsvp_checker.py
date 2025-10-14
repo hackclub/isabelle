@@ -43,7 +43,7 @@ async def check_rsvps():
                     f"Hey! Just a reminder that {event['Title']} run by {event['Leader']} is tomorrow! Hope to see you there!",
                     event,
                 )
-            env.database.update_event(str(event["id"]), **{"Sent1DayReminder": True})
+            await env.database.update_event(str(event["id"]), **{"Sent1DayReminder": True})
 
         # Handle 1 hour reminders
         elif start_time - time.time() <= 3600 and not event.get(
@@ -55,7 +55,7 @@ async def check_rsvps():
                     f"Hey! Just a reminder that {event['Title']} run by {event['Leader']} starts in 1 hour! Hope to see you there!\nYou can join the event at {event.get('EventLink', 'the Slack!')}",
                     event,
                 )
-            env.database.update_event(str(event["id"]), **{"Sent1HourReminder": True})
+            await env.database.update_event(str(event["id"]), **{"Sent1HourReminder": True})
 
         elif start_time - time.time() <= 0 and not event.get(
             "SentStartingReminder", True
@@ -68,7 +68,7 @@ async def check_rsvps():
                     event,
                     email=True,
                 )
-            env.database.update_event(str(event["id"]), **{"SentStartingReminder": True})
+            await env.database.update_event(str(event["id"]), **{"SentStartingReminder": True})
 
 
 async def rsvp_worker(interval_seconds = 60):
@@ -81,5 +81,12 @@ async def rsvp_worker(interval_seconds = 60):
 
 
 def init():
-    asyncio.get_event_loop().create_task(rsvp_worker())
+    try:
+        loop = asyncio.get_running_loop() 
+    except RuntimeError:
+        raise RuntimeError(
+            "rsvp_checker.init() must be called from within a running asyncio loop."
+        )
+    loop.create_task(check_rsvps())   # check at startup
+    loop.create_task(rsvp_worker())   # periodic worker
     print("Initialized RSVP checker")
