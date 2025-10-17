@@ -9,6 +9,8 @@ from slack_sdk.web.async_client import AsyncWebClient
 from isabelle.utils.env import env
 from isabelle.utils.utils import rich_text_to_md
 from isabelle.utils.utils import rich_text_to_mrkdwn
+from slack_gfm import rich_text_to_gfm
+
 from isabelle.views.app_home import get_home
 from datetime import datetime
 
@@ -58,7 +60,7 @@ async def handle_create_event_view(ack: Callable, body: dict[str, Any], client: 
     host_mention = f"for <@{host_id}>" if host_id != user_id else ""
     host_str = f"<@{user_id}> {host_mention}"
     rich_text = json.loads(event["RawDescription"])
-    mrkdwn = rich_text_to_mrkdwn(rich_text)
+    mrkdwn = rich_text_to_gfm(rich_text)
     await client.chat_postMessage(
         channel=env.slack_approval_channel,
         text=f"New event request by <@{body['user']['id']}>!\nTitle: {title[0]}\nDescription: {mrkdwn}\nStart Time: {start_time}\nEnd Time: {end_time}",
@@ -67,7 +69,7 @@ async def handle_create_event_view(ack: Callable, body: dict[str, Any], client: 
                 "type": "section",
                 "text": {
                     "type": "mrkdwn",
-                    "text": f"New event request by {host_str}!\n*Title:* {title[0]}\n*Description:* {mrkdwn}\n*Start Time (local time):* <!date^{start_time}^{{date_num}} at {{time_secs}}|{fallback_start_time}>\n*End Time (local time):* <!date^{end_time}^{{date_num}} at {{time_secs}}|{fallback_end_time}>",
+                    "text": f"New event request by {host_str}!\n*Title:* {title[0]}\n*Description:* {mrkdwn}\n*Start Time (local time):* <!date^{int(start_time.timestamp())}^{{date_num}} at {{time_secs}}|{fallback_start_time}>\n*End Time (local time):* <!date^{int(end_time.timestamp())}^{{date_num}} at {{time_secs}}|{fallback_end_time}>",
                 },
             }
         ],

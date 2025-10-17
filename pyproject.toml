@@ -14,6 +14,7 @@ dependencies = [
     "schedule>=1.2.2",
     "sentry-sdk>=2.23.1",
     "slack-bolt>=1.23.0",
+    "slack-gfm>=0.2.1",
     "starlette>=0.48.0",
     "uvicorn>=0.37.0",
 ]
