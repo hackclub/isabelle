@@ -53,12 +53,12 @@ api = Starlette(
             "/admin/",
             create_admin(
                 tables=APP_CONFIG.table_classes,
-                # allowed_hosts=['isabelle.hackclub.com']
+                allowed_hosts=['isabelle.hackclub.com']
             ),
         ),
         Mount("/static/", StaticFiles(directory="static")),
-        Mount("/events/", PiccoloCRUD(table=Event,read_only=True)),
-        Route("/slack/events",endpoint=endpoint, methods=["POST"])
+        Mount("/events/", PiccoloCRUD(table=Event,read_only=True,page_size=255)),
+        Route("/slack/events",endpoint=endpoint,methods=["POST"])
     ],
     lifespan=lifespan,
 )
