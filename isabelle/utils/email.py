@@ -40,6 +40,7 @@ class Email:
         subject -- str: Email subject
         message -- str: Email content/message
         """
+        return
         #         email = f'Name: {self.name}\nEmail: {self.email}\nSubject: {self.subject}\nMessage: {message}'
         msg = EmailMessage()
         msg.set_content(message)
