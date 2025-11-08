@@ -7,6 +7,7 @@ from starlette.applications import Starlette
 from starlette.routing import Mount, Route
 from starlette.staticfiles import StaticFiles
 from starlette.requests import Request
+from starlette.responses import JSONResponse
 
 from isabelle.endpoints import HomeEndpoint
 from isabelle.piccolo_app import APP_CONFIG
@@ -15,8 +16,10 @@ from slack_bolt.adapter.starlette.async_handler import AsyncSlackRequestHandler
 from isabelle.utils.slack import app 
 from isabelle.utils import rsvp_checker
 
+engine = None
 
 async def open_database_connection_pool():
+    global engine
     try:
         engine = engine_finder()
         await engine.start_connection_pool()
@@ -25,12 +28,33 @@ async def open_database_connection_pool():
 
 
 async def close_database_connection_pool():
+    global engine
     try:
+
         engine = engine_finder()
         await engine.close_connection_pool()
     except Exception:
         print("Unable to connect to the database")
 
+async def health(req: Request):
+    try:
+        await app._async_client.api_test()
+        slack_healthy = True
+    except Exception:
+        slack_healthy = False
+    
+    try:
+        db_healthy = (await engine.get_version() is not None) if engine else False
+    except Exception: 
+        db_healthy = False
+
+    return JSONResponse(
+        {
+            "healthy": slack_healthy and db_healthy,
+            "slack": slack_healthy,
+            "database": db_healthy,
+        }
+    )
 
 @asynccontextmanager
 async def lifespan(app: Starlette):
@@ -58,7 +82,8 @@ api = Starlette(
         ),
         Mount("/static/", StaticFiles(directory="static")),
         Mount("/events/", PiccoloCRUD(table=Event,read_only=True,page_size=255)),
-        Route("/slack/events",endpoint=endpoint,methods=["POST"])
+        Route("/slack/events",endpoint=endpoint,methods=["POST"]),
+        Route("/health",endpoint=health,methods=["GET"])
     ],
     lifespan=lifespan,
 )
