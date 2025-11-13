@@ -18,6 +18,7 @@ async def handle_close_edit_event(ack, body, client: AsyncWebClient):
             .add_block(
                 Actions()
                     .add_element(Button("Cancel event").style('danger').value(event_id).action_id("reject-event"))
+                    .add_element(Button("Edit AMA fields").value(event_id).action_id("edit-ama-fields"))
             )
         ).build()
 
