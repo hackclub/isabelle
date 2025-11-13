@@ -42,7 +42,6 @@ async def handle_create_event_view(ack: Callable, body: dict[str, Any], client: 
         )
         return
 
-    print(end_time)
     event = await env.database.create_event(
         title=title[0],
         description=md,

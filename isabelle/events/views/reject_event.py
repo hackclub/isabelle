@@ -14,7 +14,7 @@ async def handle_reject_event_view(ack: Callable, body: dict[str, Any], client: 
     event_id = view["private_metadata"]
 
     event = await env.database.get_event(event_id)
-    print(event)
+    print(f'rejecting event: {event}')
 
     if not event:
         await client.chat_postEphemeral(
