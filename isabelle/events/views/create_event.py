@@ -3,6 +3,7 @@ from datetime import datetime
 from datetime import timezone
 from typing import Any
 from typing import Callable
+from urllib.parse import urlparse
 
 from slack_sdk.web.async_client import AsyncWebClient
 
@@ -33,6 +34,13 @@ async def handle_create_event_view(ack: Callable, body: dict[str, Any], client: 
     user = await client.users_info(user=host_id)
     host_name = user["user"]["real_name"]
 
+    if not urlparse(location).scheme or not urlparse(location).netloc:
+        await client.chat_postEphemeral(
+            user=body["user"]["id"],
+            channel=body["user"]["id"],
+            text='The event location must be an URL.'
+        )
+        return
 
     print(end_time)
     event = await env.database.create_event(
