@@ -10,9 +10,12 @@ from isabelle.events.buttons.edit_event import handle_edit_event_btn
 from isabelle.events.buttons.propose_event import handle_propose_event_btn
 from isabelle.events.buttons.reject_event import handle_reject_event_btn
 from isabelle.events.buttons.rsvp import handle_rsvp_btn
+from isabelle.events.buttons.edit_ama_fields import handle_edit_ama_fields_btn
 from isabelle.events.views.create_event import handle_create_event_view
 from isabelle.events.views.edit_event import handle_edit_event_view
 from isabelle.events.views.reject_event import handle_reject_event_view
+from isabelle.events.views.close_edit_event import handle_close_edit_event
+from isabelle.events.views.edit_ama_fields import handle_edit_ama_fields_view
 from isabelle.events.shortcuts.set_rsvp_msg import handle_set_rsvp_msg
 from isabelle.events.views.rsvp_msg_set_response import handle_rsvp_msg_set_response
 from isabelle.events.reaction_added import handle_reaction_added
@@ -91,3 +94,16 @@ async def rsvp_msg_set_response(ack, body, view, client):
 @app.event("reaction_added")
 async def reaction_added(body, client):
     await handle_reaction_added(body, client)
+
+@app.view_closed("edit_event")
+async def close_edit_event(ack, body, client):
+    await handle_close_edit_event(ack, body, client)
+
+
+@app.action("edit-ama-fields")
+async def edit_ama_fields_btn(ack: Callable, body: dict[str, Any], client: AsyncWebClient):
+    await handle_edit_ama_fields_btn(ack, body, client)
+
+@app.view("edit_ama_fields")
+async def edit_ama_fields_view(ack: Callable, body: dict[str, Any], client: AsyncWebClient):
+    await handle_edit_ama_fields_view(ack, body, client)

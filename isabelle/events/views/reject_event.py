@@ -14,7 +14,7 @@ async def handle_reject_event_view(ack: Callable, body: dict[str, Any], client: 
     event_id = view["private_metadata"]
 
     event = await env.database.get_event(event_id)
-    print(event)
+    print(f'rejecting event: {event}')
 
     if not event:
         await client.chat_postEphemeral(
@@ -33,7 +33,7 @@ async def handle_reject_event_view(ack: Callable, body: dict[str, Any], client: 
         return
 
     event = await env.database.update_event(
-        event_id, **{"Cancelled": True, "RawCancellation": json.dumps(message)}
+        event_id, **{"Cancelled": True, "RawCancellation": json.dumps(message), "Approved": False}
     )
 
     await client.chat_postMessage(

@@ -62,7 +62,7 @@ def get_create_event_modal(user_id: str):
                 "elements": [
                     {
                         "type": "mrkdwn",
-                        "text": "_Defaults to #community huddle link if not provided._",
+                        "text": "Must be a full URL. _Defaults to #community huddle link if not provided._",
                     }
                 ],
             },

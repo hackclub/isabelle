@@ -24,7 +24,6 @@ async def get_home(user_id: str, client: AsyncWebClient):
 
     events = await env.database.get_all_events(include_unapproved=True)
 
-    print(events)
     upcoming_events = [
         event
         for event in events
