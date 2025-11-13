@@ -10,10 +10,11 @@ async def get_edit_event_modal(event_id: str):
     return {
         "type": "modal",
         "callback_id": "edit_event",
+        "notify_on_close": True,
         "private_metadata": event_id,
         "title": {"type": "plain_text", "text": "Add Event", "emoji": True},
         "submit": {"type": "plain_text", "text": "Submit", "emoji": True},
-        "close": {"type": "plain_text", "text": "Cancel", "emoji": True},
+        "close": {"type": "plain_text", "text": "Cancel event", "emoji": True},
         "blocks": [
             {
                 "type": "section",

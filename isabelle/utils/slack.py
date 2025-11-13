@@ -91,3 +91,7 @@ async def rsvp_msg_set_response(ack, body, view, client):
 @app.event("reaction_added")
 async def reaction_added(body, client):
     await handle_reaction_added(body, client)
+
+@app.view_closed("edit_event")
+async def reject_event_edit_modal(body, client):
+    await handle_reject_event_edit_modal(body, client)
