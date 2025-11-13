@@ -13,6 +13,7 @@ from isabelle.events.buttons.rsvp import handle_rsvp_btn
 from isabelle.events.views.create_event import handle_create_event_view
 from isabelle.events.views.edit_event import handle_edit_event_view
 from isabelle.events.views.reject_event import handle_reject_event_view
+from isabelle.events.views.close_edit_event import handle_close_edit_event
 from isabelle.events.shortcuts.set_rsvp_msg import handle_set_rsvp_msg
 from isabelle.events.views.rsvp_msg_set_response import handle_rsvp_msg_set_response
 from isabelle.events.reaction_added import handle_reaction_added
@@ -93,5 +94,5 @@ async def reaction_added(body, client):
     await handle_reaction_added(body, client)
 
 @app.view_closed("edit_event")
-async def reject_event_edit_modal(body, client):
-    await handle_reject_event_edit_modal(body, client)
+async def close_edit_event(ack, body, client):
+    await handle_close_edit_event(ack, body, client)

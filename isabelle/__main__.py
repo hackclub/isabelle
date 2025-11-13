@@ -14,7 +14,7 @@ async def start():
     
     #sentry_sdk.init(dsn=env.sentry_dsn, traces_sample_rate=1.0)
     #sentry_sdk.profiler.start_profiler()
-    rspv_checker.init()
+    #rspv_checker.init()
 
     if env.slack_app_token is not None:
         handler = AsyncSocketModeHandler(app, env.slack_app_token)
