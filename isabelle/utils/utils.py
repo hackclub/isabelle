@@ -128,19 +128,24 @@ def parse_elements_to_mrkdwn(elements):
 
 def rich_text_to_mrkdwn(data):
     mrkdwn = ""
-    for block in data:
-        if isinstance(block, dict) and block["type"] == "rich_text_section":
-            mrkdwn += parse_elements_to_mrkdwn(block["elements"]) + "\n"
-        elif isinstance(block, dict) and block["type"] == "rich_text_quote":
-            mrkdwn += "> " + parse_elements_to_mrkdwn(block["elements"]) + "\n"
-            # Handle nested lists within quotes
-            mrkdwn += rich_text_to_mrkdwn(block["elements"])
-        elif isinstance(block, dict) and block["type"] == "rich_text_preformatted":
-            mrkdwn += "```\n" + parse_elements_to_mrkdwn(block["elements"]) + "\n```\n"
-        elif isinstance(block, dict) and block["type"] == "rich_text_list":
-            for item in block["elements"]:
-                mrkdwn += f"- {parse_elements_to_mrkdwn(item['elements'])}\n"
-                # Recursively parse nested lists
-                if "elements" in item:
-                    mrkdwn += rich_text_to_mrkdwn(item["elements"])
-    return mrkdwn
+    try: 
+
+        for block in data:
+            if isinstance(block, dict) and block["type"] == "rich_text_section":
+                mrkdwn += parse_elements_to_mrkdwn(block["elements"]) + "\n"
+            elif isinstance(block, dict) and block["type"] == "rich_text_quote":
+                mrkdwn += "> " + parse_elements_to_mrkdwn(block["elements"]) + "\n"
+                # Handle nested lists within quotes
+                mrkdwn += rich_text_to_mrkdwn(block["elements"])
+            elif isinstance(block, dict) and block["type"] == "rich_text_preformatted":
+                mrkdwn += "```\n" + parse_elements_to_mrkdwn(block["elements"]) + "\n```\n"
+            elif isinstance(block, dict) and block["type"] == "rich_text_list":
+                for item in block["elements"]:
+                    mrkdwn += f"- {parse_elements_to_mrkdwn(item['elements'])}\n"
+                    # Recursively parse nested lists
+                    if "elements" in item:
+                        mrkdwn += rich_text_to_mrkdwn(item["elements"])
+        return mrkdwn
+    except Exception as e:
+        print(f"Error parsing the following rich text: {data}\n\n{e}")
+        return "[Invalid rich text provided]"
