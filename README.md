@@ -9,21 +9,22 @@ Isabelle is a Slack bot for discovering events in the Hack Club Slack. It provid
 - Event Timeline
 - Creating Events & event management
 - Showing Interest in Events
-- Alerts when an event starts via DMs and email
-
+- Alerts when an event starts via DMs and email (email is currently disabled)
+- Serving a rest API with all the events
 
 Visit the [App Home](slack://app?team=T0266FRGM&id=A07S8R2G3SQ) to see upcoming events and create or propose new events.
 
 ## Development
 
-To run the bot locally, you'll need to set up a Slack app and will need access to the Airtable base. You'll need to set the following environment variables:
+To run the bot locally, you'll need to set up a Slack app and run a postgresql database. You'll need to set the following environment variables:
 
 - `SLACK_SIGNING_SECRET` - _the signing secret for the Slack app. Found on the Slack app dashboard_
 - `SLACK_BOT_TOKEN` - _the bot token for the Slack app. Found on the Slack app dashboard after authorising the app_
 - `SLACK_SAD_CHANNEL` - _the ID of the private SAD channel. Get this from the channel URL_
 - `SLACK_APPROVAL_CHANNEL`- _the ID of the channel events are sent to for approval. Get this from the channel URL_
-- `AIRTABLE_API_KEY` - _the API key for the Airtable base. Get this from [here](https://airtable.com/create/tokens/new)_
-- `AIRTABLE_BASE_ID` - _the ID of the Airtable base. Get this from the URL (begins with `app`)_
+- `POSTGRES_PASSWORD`
+- `POSTGRES_HOST`
+- `POSTGRES_PORT`
 - `GOOGLE_USERNAME` - _the email address of the Google account to use for sending emails_
 - `GOOGLE_PASSWORD` - _the app password of the Google account to use for sending emails_
 - `PORT` - _optional, defaults to 3000_
@@ -90,11 +91,18 @@ For the Slack app, here is the manifest you will need. Make sure to change the c
 
 To actually run the bot, you can use the following commands:
 
+First, start the database
 ```bash
-git clone https://github.com/DillonB07/EventManager
+podman run -d --name isabelledb -e POSTGRES_PASSWORD=postgres -p 5432:5432 postgres:latest
+```
+
+```bash
+git clone https://github.com/hackclub/isabelle EventManager
 cd EventManager
-python3 -m venv .venv
+uv sync
 source .venv/bin/activate
-python3 -m pip install -r requirements.txt
-python3 app.py
+# for the full app
+python3 main.py
+# for the development slack app in socket mode
+python3 isabelle/__main__.py
 ```
