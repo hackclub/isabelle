@@ -81,7 +81,7 @@ api = Starlette(
             ),
         ),
         Mount("/static/", StaticFiles(directory="static")),
-        Mount("/events/", PiccoloCRUD(table=Event,read_only=True,page_size=10000)),
+        Mount("/events/", PiccoloCRUD(table=Event,read_only=True,page_size=10000,max_page_size=10000)),
         Route("/slack/events",endpoint=endpoint,methods=["POST"]),
         Route("/health",endpoint=health,methods=["GET"])
     ],
