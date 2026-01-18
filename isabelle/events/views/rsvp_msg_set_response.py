@@ -32,6 +32,7 @@ async def handle_rsvp_msg_set_response(ack: callable, body, view, client: AsyncW
             text="Error setting RSVP message for the event."
         )
 
+    await rsvp_previous_reactions(client=client, message_ts=message_ts, channel_id=channel_id, reaction_name=emoji_name, event_id=chosen_event_id)
     pass
 
 
@@ -50,3 +51,38 @@ def extract_emoji_name(view):
         emoji_name = None
 
     return emoji_name
+
+async def rsvp_previous_reactions(client: AsyncWebClient, message_ts: str, channel_id: str, reaction_name: str | None, event_id: str):
+    res = await client.reactions_get(timestamp=message_ts, channel=channel_id, full=True)
+
+    msg_url = (await client.chat_getPermalink(channel=channel_id, message_ts=message_ts)).get("permalink")
+
+    if not res.get("ok"):
+        return
+    
+    reactions: list = res.get("message").get("reactions")
+
+    # Holy ternary shenanigans. I'm so sorry for this, seems like the python way
+    reactions = [i for i in reactions if i.get("name") == reaction_name] if reaction_name else reactions
+
+    users = [user for reaction in reactions for user in reaction["users"]]
+
+    users = set(users)
+
+    for user_id in users:
+        event_to_rsvp = event_id
+        event = await env.database.toggle_user_interest(event_to_rsvp,user_id)
+
+        if not event:
+            print(f'Error trying to retroactively RSVP {user_id}')
+        else:
+            try: 
+                await client.chat_postMessage(
+                    channel=user_id,
+                    text=f'You previously had shown interest on <{msg_url}|an event>. You will receive reminders about the event. To remove your interest, remove your reaction in the announcement message.'
+                    )
+            except Exception:
+                pass
+
+
+    pass

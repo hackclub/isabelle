@@ -35,15 +35,21 @@ async def handle_reaction_added(body, client: AsyncWebClient):
         )
         return
     if str(body["event"]["user"]) not in event.get("InterestedUsers", []):
-        await client.chat_postEphemeral(
-            channel=body["event"]["item"]["channel"],
-            user=body["event"]["user"],
-            text='Removed RSVP from the event. React again to toggle it back.'
-        )
+        try: 
+            await client.chat_postEphemeral(
+                channel=body["event"]["item"]["channel"],
+                user=body["event"]["user"],
+                text='Removed RSVP from the event. React again to toggle it back.'
+            )
+        except Exception:
+            pass
     else:
-        await client.chat_postEphemeral(
-            channel=body["event"]["item"]["channel"],
-            user=body["event"]["user"],
-            text='Successfully RSVPed to the event. You will receive reminders about the event.'
-        )
+        try: 
+            await client.chat_postEphemeral(
+                channel=body["event"]["item"]["channel"],
+                user=body["event"]["user"],
+                text='Successfully RSVPed to the event. You will receive reminders about the event.'
+            )
+        except Exception:
+            pass
     
