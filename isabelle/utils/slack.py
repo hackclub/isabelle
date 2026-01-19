@@ -97,7 +97,7 @@ async def reaction_added(body, client):
     await handle_reaction_added(body, client)
 
 @app.event("reaction_removed")
-async def handle_reaction_removed(body, client):
+async def reaction_removed(body, client):
     await handle_reaction_removed(body, client)
 
 @app.view_closed("edit_event")
