@@ -25,7 +25,7 @@ async def handle_reaction_added(body, client: AsyncWebClient):
     if event_to_rsvp is None:
         return
     
-    event = await env.database.toggle_user_interest(event_to_rsvp,body["event"]["user"])
+    event = await env.database.toggle_user_interest(event_to_rsvp,body["event"]["user"],forced_state=True)
 
     if not event:
         await client.chat_postEphemeral(

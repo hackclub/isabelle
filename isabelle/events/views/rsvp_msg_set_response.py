@@ -71,7 +71,7 @@ async def rsvp_previous_reactions(client: AsyncWebClient, message_ts: str, chann
 
     for user_id in users:
         event_to_rsvp = event_id
-        event = await env.database.toggle_user_interest(event_to_rsvp,user_id)
+        event = await env.database.toggle_user_interest(event_to_rsvp,user_id,forced_state=True)
 
         if not event:
             print(f'Error trying to retroactively RSVP {user_id}')
