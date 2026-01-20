@@ -111,7 +111,7 @@ class DatabaseService:
             updates["RawCancellation"] = reason
         return await self.update_event(event_id, **updates)
     
-    async def toggle_user_interest(self, event_id: str, user_slack_id: str) -> Optional[Event]:
+    async def toggle_user_interest(self, event_id: str, user_slack_id: str, forced_state: Optional[bool] = None) -> Optional[Event]:
         try:
             event_uuid = uuid.UUID(event_id)
             event = await Event.objects().where(Event.id == event_uuid).first()
@@ -120,12 +120,26 @@ class DatabaseService:
                 return None
                 
             interested_users = list(event.InterestedUsers or [])
+            unupdated_users_set = set(interested_users)
             
-            if user_slack_id in interested_users:
-                interested_users.remove(user_slack_id)
-            else:
-                interested_users.append(user_slack_id)
+            if forced_state is True:
+                if user_slack_id not in interested_users:
+                    interested_users.append(user_slack_id)
+         
+            elif forced_state is False:
+                if user_slack_id in interested_users:
+                    interested_users.remove(user_slack_id)
             
+            elif forced_state == None:
+                if user_slack_id in interested_users:
+                    interested_users.remove(user_slack_id)
+                else:
+                    interested_users.append(user_slack_id)
+
+
+            if set(interested_users) == unupdated_users_set:
+                return event
+
             await Event.update(
                 InterestedUsers=interested_users,
                 InterestCount=len(interested_users)

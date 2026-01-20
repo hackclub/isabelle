@@ -5,7 +5,7 @@ import os
 
 DB = PostgresEngine(
     config={
-        "database": "isatest",
+        "database": "postgres",
         "user": "postgres",
         "password": os.getenv("POSTGRES_PASSWORD","postgres"),
         "host": os.getenv("POSTGRES_HOST","localhost"),
