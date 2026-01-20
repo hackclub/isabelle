@@ -1,7 +1,7 @@
 
 from slack_sdk.web.async_client import AsyncWebClient
 from isabelle.utils.env import env
-async def handle_reaction_added(body, client: AsyncWebClient):
+async def handle_reaction_removed(body, client: AsyncWebClient):
     upcoming_events = await env.database.get_upcoming_events()
 
     if not upcoming_events:
@@ -25,13 +25,13 @@ async def handle_reaction_added(body, client: AsyncWebClient):
     if event_to_rsvp is None:
         return
     
-    event = await env.database.toggle_user_interest(event_to_rsvp,body["event"]["user"],forced_state=True)
+    event = await env.database.toggle_user_interest(event_to_rsvp,body["event"]["user"],forced_state=False)
 
     if not event:
         await client.chat_postEphemeral(
         channel=body["event"]["item"]["channel"],
         user=body["event"]["user"],
-        text='Error RSVPing to the event. :('
+        text='Error disabling RSVPing to the event. :('
         )
         return
     if str(body["event"]["user"]) not in event.get("InterestedUsers", []):

@@ -19,6 +19,7 @@ from isabelle.events.views.edit_ama_fields import handle_edit_ama_fields_view
 from isabelle.events.shortcuts.set_rsvp_msg import handle_set_rsvp_msg
 from isabelle.events.views.rsvp_msg_set_response import handle_rsvp_msg_set_response
 from isabelle.events.reaction_added import handle_reaction_added
+from isabelle.events.reaction_removed import handle_reaction_removed
 from isabelle.utils.env import env
 from isabelle.views.app_home import get_home
 from slack_bolt.async_app import AsyncApp
@@ -94,6 +95,10 @@ async def rsvp_msg_set_response(ack, body, view, client):
 @app.event("reaction_added")
 async def reaction_added(body, client):
     await handle_reaction_added(body, client)
+
+@app.event("reaction_removed")
+async def reaction_removed(body, client):
+    await handle_reaction_removed(body, client)
 
 @app.view_closed("edit_event")
 async def close_edit_event(ack, body, client):
