@@ -1,5 +1,5 @@
 from piccolo.table import Table
-from piccolo.columns import Varchar,Boolean,Timestamp, SmallInt, Text, Array, UUID
+from piccolo.columns import Varchar,Boolean,Timestamp, SmallInt, Text, Array, UUID, BigInt
 
 
 # Schema copied form airtable using PascalCase
@@ -42,3 +42,4 @@ class Event(Table):
     InterestedUsers = Array(base_column=Text(),default=[])
     InterestCount = SmallInt() # I know this could easily be calculated but I will try to keep this as close to the airtable as possible
     rsvpMsg = Text(null=True)
+    attendeeCount = BigInt(null=True)
