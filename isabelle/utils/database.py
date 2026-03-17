@@ -94,6 +94,24 @@ class DatabaseService:
     
     
     async def update_event(self, event_id: str, **updates) -> Optional[Event]:
+
+        if updates.get("StartTime") or updates.get("EndTime"):
+            event = await self.get_event(event_id)
+            if not event:
+                return None
+            
+            start_time = updates.get("StartTime", event.StartTime)
+            end_time = updates.get("EndTime", event.EndTime)
+            updates["CalendarLink"] = make_google_calendar_url(
+                title=updates.get("Title", event.Title),
+                description=updates.get("Description", event.Description),
+                leader=updates.get("Leader", event.Leader),
+                event_link=updates.get("EventLink", event.EventLink),
+                start=start_time,
+                end=end_time
+            )
+
+
         try:
             event_uuid = uuid.UUID(event_id) 
             await Event.update(**updates).where(Event.id == event_uuid)
