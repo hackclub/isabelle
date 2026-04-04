@@ -32,7 +32,10 @@ def parse_elements(elements):
                     text = f"`{text}`"
             markdown += text
         elif element["type"] == "link":
-            markdown += f"[{element['text']}]({element['url']})"
+            if element.get('text'):
+                 markdown += f"[{element['text']}]({element['url']})"
+            else:
+                markdown += element['url']
         elif element["type"] == "user":
             markdown += f"<@{element['user_id']}>"
         elif element["type"] == "emoji":
