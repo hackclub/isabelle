@@ -106,10 +106,10 @@ class DatabaseService:
             start_time = updates.get("StartTime", event.get("StartTime"))
             end_time = updates.get("EndTime", event.get("EndTime"))
             updates["CalendarLink"] = make_google_calendar_url(
-                title=updates.get("Title", event.Title),
-                description=updates.get("Description", event.Description),
-                leader=updates.get("Leader", event.Leader),
-                event_link=updates.get("EventLink", event.EventLink),
+                title=updates.get("Title", event.get("Title")),
+                description=updates.get("Description", event.get("Description")),
+                leader=updates.get("Leader", event.get("Leader")),
+                event_link=updates.get("EventLink", event.get("EventLink")),
                 start=start_time,
                 end=end_time
             )
