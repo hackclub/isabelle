@@ -26,6 +26,7 @@ class DatabaseService:
         avatar_url: Optional[str] = None,
         event_link: Optional[str] = None,
         approved: bool = False,
+        tags: Optional[List[str]] = None,
     ) -> Optional[Event]:
         
         raw_description_json = json.dumps({
@@ -52,6 +53,7 @@ class DatabaseService:
             SentStartingReminder=False,
             HasHappened=False,
             AMA=False,
+            Tags=tags or [],
             Calculation=title.lower().replace(" ", "-").replace(":",""), # copied from the airtable formula
             CalendarLink=make_google_calendar_url(title=title,description=description,end=end_time,event_link=event_link,leader=leader_name,start=start_time)
         )
