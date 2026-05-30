@@ -1,3 +1,5 @@
+import logging
+
 from slack_sdk.web.async_client import AsyncWebClient
 from isabelle.utils.env import env
 
@@ -13,9 +15,8 @@ async def handle_rsvp_msg_set_response(ack: callable, body, view, client: AsyncW
             timestamp=message_ts,
             name=emoji_name
         )
-    except Exception as e:
-        print("Error reacting@handle_rsvp_msg_set_response ",e)
-        pass
+    except Exception:
+        logging.warning("Error adding reaction in handle_rsvp_msg_set_response", exc_info=True)
 
     ev = await env.database.set_rsvp_msg(chosen_event_id, message_ts, channel_id, emoji_name)
 
@@ -74,7 +75,7 @@ async def rsvp_previous_reactions(client: AsyncWebClient, message_ts: str, chann
         event = await env.database.toggle_user_interest(event_to_rsvp,user_id,forced_state=True)
 
         if not event:
-            print(f'Error trying to retroactively RSVP {user_id}')
+            logging.warning("Error trying to retroactively RSVP %s", user_id)
         else:
             try: 
                 await client.chat_postMessage(

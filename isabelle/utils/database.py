@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 from typing import List, Optional, Dict
 import uuid
 import json
+import logging
 from urllib.parse import quote
 
 from isabelle.tables import Event
@@ -56,12 +57,12 @@ class DatabaseService:
         )
 
         try: 
-            print("Trying to insert event ", title)
+            logging.info("Trying to insert event ", title)
             await Event.insert(event)
         except Exception as e:
-            print("Error creating event",e)
+            logging.error("Error creating event",e)
             return None
-        print("Event created successfully")
+        logging.info("Event created successfully")
         
         return event
     
@@ -94,12 +95,30 @@ class DatabaseService:
     
     
     async def update_event(self, event_id: str, **updates) -> Optional[Event]:
+
+        if updates.get("StartTime") or updates.get("EndTime"):
+            event = await self.get_event(event_id)
+            if not event:
+                return None
+            
+            start_time = updates.get("StartTime", event.get("StartTime"))
+            end_time = updates.get("EndTime", event.get("EndTime"))
+            updates["CalendarLink"] = make_google_calendar_url(
+                title=updates.get("Title", event.Title),
+                description=updates.get("Description", event.Description),
+                leader=updates.get("Leader", event.Leader),
+                event_link=updates.get("EventLink", event.EventLink),
+                start=start_time,
+                end=end_time
+            )
+
+
         try:
             event_uuid = uuid.UUID(event_id) 
             await Event.update(**updates).where(Event.id == event_uuid)
             return await Event.select().where(Event.id == event_uuid).first()
         except (ValueError, TypeError) as e:
-            print(e)
+            logging.error(e)
             return None
     
     async def approve_event(self, event_id: str) -> Optional[Event]:

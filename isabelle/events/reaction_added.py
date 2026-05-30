@@ -1,11 +1,14 @@
 
+import logging
+
 from slack_sdk.web.async_client import AsyncWebClient
 from isabelle.utils.env import env
+
 async def handle_reaction_added(body, client: AsyncWebClient):
     upcoming_events = await env.database.get_upcoming_events()
 
     if not upcoming_events:
-        print("No upcoming events found")
+        logging.debug("No upcoming events found for reaction_added")
         return
     
     # [(message_ts, channel_id, reaction_name, event_id)]

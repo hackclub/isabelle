@@ -1,3 +1,4 @@
+import logging
 import smtplib
 from email.message import EmailMessage
 
@@ -30,8 +31,8 @@ class Email:
         try:
             self.server.connect(server, port)
             self.server.login(self.sender, password)
-        except Exception as e:
-            print(e)
+        except Exception:
+            logging.exception("Failed to connect to SMTP server")
 
     def send_email(self, recipient: str, subject: str, message: str):
         """Send an email
@@ -54,8 +55,8 @@ class Email:
                 server.login(self.sender, self.password)
                 server.ehlo()
                 server.send_message(msg)
-            print("Email successfully sent")
+            logging.info("Email successfully sent to %s", recipient)
             return True
-        except Exception as e:
-            print("Error", e)
+        except Exception:
+            logging.exception("Failed to send email to %s", recipient)
             return False
