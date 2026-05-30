@@ -2,6 +2,7 @@ import json
 from datetime import datetime
 
 from isabelle.utils.env import env
+from isabelle.views.create_event import _tag_options
 
 
 async def get_edit_event_modal(event_id: str):
@@ -92,6 +93,19 @@ async def get_edit_event_modal(event_id: str):
                     "initial_value": event.get("EventLink")
                 },
                 "label": {"type":"plain_text", "text": "Event Location (URL)", "emoji": True}
-            }
+            },
+            {
+                "type": "input",
+                "block_id": "tags",
+                "element": {
+                    "type": "multi_static_select",
+                    "action_id": "tags",
+                    "placeholder": {"type": "plain_text", "text": "Select tags", "emoji": True},
+                    "options": _tag_options(event.get("Tags"))[0],
+                    "initial_options": _tag_options(event.get("Tags"))[1],
+                },
+                "label": {"type": "plain_text", "text": "Tags", "emoji": True},
+                "optional": True,
+            },
         ],
     }

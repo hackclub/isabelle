@@ -32,6 +32,9 @@ async def handle_edit_event_view(ack: Callable, body: dict[str, Any], client: As
 
     host_pfp = get_cachet_pfp(user["user"]["id"])
 
+    tags_block = values.get("tags", {}).get("tags", {})
+    tags = [opt["value"] for opt in tags_block.get("selected_options", [])]
+
     raw_description_string = json.dumps(
         {
             "type": "rich_text",
@@ -53,6 +56,7 @@ async def handle_edit_event_view(ack: Callable, body: dict[str, Any], client: As
             "LeaderSlackID": host_id,
             "Leader": host_name,
             "Avatar": host_pfp,
+            "Tags": tags,
         },
     )
     if not event:
@@ -72,15 +76,16 @@ async def handle_edit_event_view(ack: Callable, body: dict[str, Any], client: As
     host_str = f"<@{user_id}> {host_mention}"
     rich_text = json.loads(raw_description_string)
     mrkdwn = rich_text_to_mrkdwn(rich_text)
+    tags_str = ", ".join(t.replace("-", " ").title() for t in tags) if tags else "None"
     await client.chat_postMessage(
         channel=env.slack_approval_channel,
-        text=f"Event updated by <@{body['user']['id']}>!\nTitle: {title[0]}\nDescription: {mrkdwn}\nStart Time: {start_time[0]}\nEnd Time: {end_time[0]}",
+        text=f"Event updated by <@{body['user']['id']}>!\nTitle: {title[0]}\nDescription: {mrkdwn}\nTags: {tags_str}\nStart Time: {start_time[0]}\nEnd Time: {end_time[0]}",
         blocks=[
             {
                 "type": "section",
                 "text": {
                     "type": "mrkdwn",
-                    "text": f"Event updated by {host_str}!\n*Title:* {title[0]}\n*Description:* {mrkdwn}\n*Start Time (local time):* <!date^{start_time[0]}^{{date_num}} at {{time_secs}}|{fallback_start_time}>\n*End Time (local time):* <!date^{end_time[0]}^{{date_num}} at {{time_secs}}|{fallback_end_time}>",
+                    "text": f"Event updated by {host_str}!\n*Title:* {title[0]}\n*Description:* {mrkdwn}\n*Tags:* {tags_str}\n*Start Time (local time):* <!date^{start_time[0]}^{{date_num}} at {{time_secs}}|{fallback_start_time}>\n*End Time (local time):* <!date^{end_time[0]}^{{date_num}} at {{time_secs}}|{fallback_end_time}>",
                 },
             }
         ],

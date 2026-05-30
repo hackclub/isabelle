@@ -26,6 +26,7 @@ class DatabaseService:
         avatar_url: Optional[str] = None,
         event_link: Optional[str] = None,
         approved: bool = False,
+        tags: Optional[List[str]] = None,
     ) -> Optional[Event]:
         
         raw_description_json = json.dumps({
@@ -52,6 +53,7 @@ class DatabaseService:
             SentStartingReminder=False,
             HasHappened=False,
             AMA=False,
+            Tags=tags or [],
             Calculation=title.lower().replace(" ", "-").replace(":",""), # copied from the airtable formula
             CalendarLink=make_google_calendar_url(title=title,description=description,end=end_time,event_link=event_link,leader=leader_name,start=start_time)
         )
@@ -104,10 +106,10 @@ class DatabaseService:
             start_time = updates.get("StartTime", event.get("StartTime"))
             end_time = updates.get("EndTime", event.get("EndTime"))
             updates["CalendarLink"] = make_google_calendar_url(
-                title=updates.get("Title", event.Title),
-                description=updates.get("Description", event.Description),
-                leader=updates.get("Leader", event.Leader),
-                event_link=updates.get("EventLink", event.EventLink),
+                title=updates.get("Title", event.get("Title")),
+                description=updates.get("Description", event.get("Description")),
+                leader=updates.get("Leader", event.get("Leader")),
+                event_link=updates.get("EventLink", event.get("EventLink")),
                 start=start_time,
                 end=end_time
             )

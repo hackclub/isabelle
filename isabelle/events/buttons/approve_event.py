@@ -41,10 +41,11 @@ async def handle_approve_event_btn(ack: Callable, body: dict[str, Any], client: 
 
     event = await env.database.update_event(value, **{"Approved": True})
 
+    tags_str = ", ".join(t.replace("-", " ").title() for t in (event.get("Tags") or [])) if event.get("Tags") else "None"
     await client.chat_postMessage(
         user=body["user"]["id"],
         channel=env.slack_approval_channel,
-        text=f"<@{user_id}> approved {event["Title"]} for <@{event["LeaderSlackID"]}>.",
+        text=f"<@{user_id}> approved {event["Title"]} for <@{event["LeaderSlackID"]}>.\nTags: {tags_str}",
     )
 
     await client.chat_postMessage(
