@@ -1,3 +1,17 @@
+from isabelle.utils.env import env
+
+
+def _tag_options(selected=None):
+    options = []
+    for tag in env.event_tags:
+        options.append({
+            "text": {"type": "plain_text", "text": tag.replace("-", " ").title(), "emoji": True},
+            "value": tag,
+        })
+    initial = [opt for opt in options if selected and opt["value"] in selected]
+    return options, initial
+
+
 def get_create_event_modal(user_id: str):
     return {
         "type": "modal",
@@ -80,6 +94,18 @@ def get_create_event_modal(user_id: str):
                     "action_id": "host",
                 },
                 "label": {"type": "plain_text", "text": "Host", "emoji": True},
+            },
+            {
+                "type": "input",
+                "block_id": "tags",
+                "element": {
+                    "type": "multi_static_select",
+                    "action_id": "tags",
+                    "placeholder": {"type": "plain_text", "text": "Select tags", "emoji": True},
+                    "options": _tag_options()[0],
+                },
+                "label": {"type": "plain_text", "text": "Tags", "emoji": True},
+                "optional": True,
             },
         ],
     }

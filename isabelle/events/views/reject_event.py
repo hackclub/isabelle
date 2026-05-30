@@ -35,15 +35,16 @@ async def handle_reject_event_view(ack: Callable, body: dict[str, Any], client: 
         event_id, **{"Cancelled": True, "RawCancellation": json.dumps(message), "Approved": False}
     )
 
+    tags_str = ", ".join(t.replace("-", " ").title() for t in (event.get("Tags") or [])) if event.get("Tags") else "None"
     await client.chat_postMessage(
         channel=env.slack_approval_channel,
-        text=f"<@{body['user']['id']}> rejected {event["Title"]} for <@{event["LeaderSlackID"]}> with the following reason.",
+        text=f"<@{body['user']['id']}> rejected {event["Title"]} for <@{event["LeaderSlackID"]}> with the following reason.\nTags: {tags_str}",
         blocks=[
             {
                 "type": "section",
                 "text": {
                     "type": "mrkdwn",
-                    "text": f"<@{body['user']['id']}> rejected {event["Title"]} for <@{event["LeaderSlackID"]}> with the following reason.",
+                    "text": f"<@{body['user']['id']}> rejected {event["Title"]} for <@{event["LeaderSlackID"]}> with the following reason.\n*Tags:* {tags_str}",
                 },
             },
             {

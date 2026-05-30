@@ -34,6 +34,9 @@ async def handle_create_event_view(ack: Callable, body: dict[str, Any], client: 
     user = await client.users_info(user=host_id)
     host_name = user["user"]["real_name"]
 
+    tags_block = values.get("tags", {}).get("tags", {})
+    tags = [opt["value"] for opt in tags_block.get("selected_options", [])]
+
     if not urlparse(location).scheme or not urlparse(location).netloc:
         await client.chat_postEphemeral(
             user=body["user"]["id"],
@@ -50,7 +53,8 @@ async def handle_create_event_view(ack: Callable, body: dict[str, Any], client: 
         end_time=end_time,
         leader_slack_id=host_id,
         leader_name=host_name,
-        event_link=location
+        event_link=location,
+        tags=tags if tags else None,
     )
     if not event:
         await client.chat_postEphemeral(
@@ -68,15 +72,16 @@ async def handle_create_event_view(ack: Callable, body: dict[str, Any], client: 
     host_str = f"<@{user_id}> {host_mention}"
     rich_text = json.loads(event["RawDescription"])
     mrkdwn = rich_text_to_gfm(rich_text)
+    tags_str = ", ".join(t.replace("-", " ").title() for t in tags) if tags else "None"
     await client.chat_postMessage(
         channel=env.slack_approval_channel,
-        text=f"New event request by <@{body['user']['id']}>!\nTitle: {title[0]}\nDescription: {mrkdwn}\nStart Time: {start_time}\nEnd Time: {end_time}",
+        text=f"New event request by <@{body['user']['id']}>!\nTitle: {title[0]}\nDescription: {mrkdwn}\nTags: {tags_str}\nStart Time: {start_time}\nEnd Time: {end_time}",
         blocks=[
             {
                 "type": "section",
                 "text": {
                     "type": "mrkdwn",
-                    "text": f"New event request by {host_str}!\n*Title:* {title[0]}\n*Description:* {mrkdwn}\n*Start Time (local time):* <!date^{int(start_time.timestamp())}^{{date_num}} at {{time_secs}}|{fallback_start_time}>\n*End Time (local time):* <!date^{int(end_time.timestamp())}^{{date_num}} at {{time_secs}}|{fallback_end_time}>",
+                    "text": f"New event request by {host_str}!\n*Title:* {title[0]}\n*Description:* {mrkdwn}\n*Tags:* {tags_str}\n*Start Time (local time):* <!date^{int(start_time.timestamp())}^{{date_num}} at {{time_secs}}|{fallback_start_time}>\n*End Time (local time):* <!date^{int(end_time.timestamp())}^{{date_num}} at {{time_secs}}|{fallback_end_time}>",
                 },
             }
         ],

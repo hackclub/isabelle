@@ -48,5 +48,12 @@ class Environment:
             "U09Q8MLTE58"   # EPS
         ]
 
+        self.event_tags = [
+            "stardance",
+            "ama",
+            "workshop",
+            "social",
+        ]
+
 
 env = Environment()
