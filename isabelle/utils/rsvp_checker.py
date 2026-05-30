@@ -1,13 +1,15 @@
+import asyncio
+import logging
 import time
 from datetime import datetime
 from typing import Any
-import asyncio
 
 from slack_sdk.web.async_client import AsyncWebClient
 
 from .env import env
 
 client = AsyncWebClient(token=env.slack_bot_token)
+logger = logging.getLogger(__name__)
 
 
 async def send_reminder(
@@ -24,7 +26,7 @@ async def send_reminder(
 
 
 async def check_rsvps():
-    print("Checking rspvs async, its", time.time())
+    logger.debug("Checking RSVPs")
     events = await env.database.get_upcoming_events()
 
     for event in events:
@@ -75,8 +77,8 @@ async def rsvp_worker(interval_seconds = 60):
     while True:
         try:
             await check_rsvps()
-        except Exception as e:
-            print("rsvp_worker error:", repr(e))
+        except Exception:
+            logger.exception("RSVP worker error")
         await asyncio.sleep(interval_seconds)
 
 
@@ -89,4 +91,4 @@ def init():
         )
     loop.create_task(check_rsvps())   # check at startup
     loop.create_task(rsvp_worker())   # periodic worker
-    print("Initialized RSVP checker")
+    logger.info("Initialized RSVP checker")

@@ -1,5 +1,8 @@
-from isabelle.utils.env import env
+import logging
+
 from blockkit import Modal, Input, Checkboxes, RadioButtons, Option, UrlInput
+
+from isabelle.utils.env import env
 
 
 async def get_edit_ama_fields_modal(event_id: str):
@@ -37,5 +40,5 @@ async def get_edit_ama_fields_modal(event_id: str):
             )
 
     ).build()
-    print(modal)
+    logging.debug("Built edit_ama_fields modal for event %s", event_id)
     return modal

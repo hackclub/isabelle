@@ -16,6 +16,9 @@ from slack_bolt.adapter.starlette.async_handler import AsyncSlackRequestHandler
 from isabelle.utils.slack import app 
 from isabelle.utils import rsvp_checker
 
+import logging
+
+
 engine = None
 
 async def open_database_connection_pool():
@@ -24,7 +27,7 @@ async def open_database_connection_pool():
         engine = engine_finder()
         await engine.start_connection_pool()
     except Exception:
-        print("Unable to connect to the database")
+        logging.error("Unable to connect to the database")
 
 
 async def close_database_connection_pool():
@@ -34,7 +37,7 @@ async def close_database_connection_pool():
         engine = engine_finder()
         await engine.close_connection_pool()
     except Exception:
-        print("Unable to connect to the database")
+        logging.error("Unable to close the connection to the database")
 
 async def health(req: Request):
     try:

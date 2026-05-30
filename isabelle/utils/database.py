@@ -2,6 +2,7 @@ from datetime import datetime, timezone
 from typing import List, Optional, Dict
 import uuid
 import json
+import logging
 from urllib.parse import quote
 
 from isabelle.tables import Event
@@ -56,12 +57,12 @@ class DatabaseService:
         )
 
         try: 
-            print("Trying to insert event ", title)
+            logging.info("Trying to insert event ", title)
             await Event.insert(event)
         except Exception as e:
-            print("Error creating event",e)
+            logging.error("Error creating event",e)
             return None
-        print("Event created successfully")
+        logging.info("Event created successfully")
         
         return event
     
@@ -117,7 +118,7 @@ class DatabaseService:
             await Event.update(**updates).where(Event.id == event_uuid)
             return await Event.select().where(Event.id == event_uuid).first()
         except (ValueError, TypeError) as e:
-            print(e)
+            logging.error(e)
             return None
     
     async def approve_event(self, event_id: str) -> Optional[Event]:

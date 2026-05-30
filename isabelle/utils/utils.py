@@ -1,3 +1,4 @@
+import logging
 import re
 
 from slack_sdk.web.async_client import AsyncWebClient
@@ -150,5 +151,5 @@ def rich_text_to_mrkdwn(data):
                         mrkdwn += rich_text_to_mrkdwn(item["elements"])
         return mrkdwn
     except Exception as e:
-        print(f"Error parsing the following rich text: {data}\n\n{e}")
+        logging.warning("Error parsing rich text", exc_info=True, extra={"data": data})
         return "[Invalid rich text provided]"
