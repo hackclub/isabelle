@@ -39,7 +39,7 @@ class Event(Table):
     RawCancellation = Text(null=True)
     # I'm not ready for DB relations and I think a ID's list will work
     # TODO: implement notify by email
-    InterestedUsers = Array(base_column=Text(),default=[])
+    InterestedUsers = Array(base_column=Text(),default=[], secret=True)
     InterestCount = SmallInt() # I know this could easily be calculated but I will try to keep this as close to the airtable as possible
     rsvpMsg = Text(null=True)
     Tags = Array(base_column=Text(), default=[])
