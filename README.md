@@ -29,6 +29,7 @@ To run the bot locally, you'll need to set up a Slack app and run a postgresql d
 - `GOOGLE_PASSWORD` - _the app password of the Google account to use for sending emails_
 - `PORT` - _optional, defaults to 3000_
 - `EVENTS_RSVP_SECRET` - the secret used for validating permissions for rsvp endpoints (generate with `openssl rand -hex 32`)
+
 For the Slack app, here is the manifest you will need. Make sure to change the command and request URLs.
 
 ```json
