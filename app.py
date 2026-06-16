@@ -17,7 +17,37 @@ from isabelle.utils.slack import app
 from isabelle.utils import rsvp_checker
 
 import logging
+import secrets
+from isabelle.utils.env import env
 
+def _check_internal_secret(req: Request) -> bool:
+    provided = req.headers.get("x-internal-secret", "")
+    return secrets.compare_digest(provided, env.events_rsvp_secret)
+
+async def internal_rsvp(req: Request):
+    if not _check_internal_secret(req):
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
+    event_id = req.path_params["event_id"]
+    body = await req.json()
+    slack_id = body.get("slack.id")
+    attending = body.get("attending")
+    if not slack_id or not isinstance(attending, bool):
+        return JSONResponse({"error": "slack_id and boolean attending required"}, status_code=422)
+    event = await env.database.toggle_user_interest(event_id, slack_id, forced_state=attending)
+    if not event:
+        return JSONResponse({"error": "event not found or update failed"}, status_code=404)
+    is_attending = slack_id in (event.get("InterestedUsers") or [])
+    return JSONResponse({"attending": is_attending, "InterestCount": event.get("InterestCount", 0)})
+
+async def internal_rsvp_list(req: Request):
+    if not _check_internal_secret(req):
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
+    event_id = req.path_params["event_id"]
+    event = await env.database.get_event(event_id)
+    if not event:
+        return JSONResponse({"error": "event not found"}, status_code=404)
+    users = list(event.get("InterestedUsers") or [])
+    return JSONResponse({"InterestedUsers": users, "InterestCount": event.get("InterestCount", 0)})
 
 engine = None
 
@@ -86,7 +116,9 @@ api = Starlette(
         Mount("/static/", StaticFiles(directory="static")),
         Mount("/events/", PiccoloCRUD(table=Event,read_only=True,page_size=1000)),
         Route("/slack/events",endpoint=endpoint,methods=["POST"]),
-        Route("/health",endpoint=health,methods=["GET"])
+        Route("/health",endpoint=health,methods=["GET"]),
+        Route("/internal/events/{event_id}/rsvp", endpoint=internal_rsvp, methods=["PUT"]),
+        Route("/internal/events/{event_id}/rsvps", endpoint=internal_rsvp_list, methods=["GET"]),
     ],
     lifespan=lifespan,
 )
