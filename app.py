@@ -29,7 +29,7 @@ async def internal_rsvp(req: Request):
         return JSONResponse({"error": "unauthorized"}, status_code=401)
     event_id = req.path_params["event_id"]
     body = await req.json()
-    slack_id = body.get("slack.id")
+    slack_id = body.get("slack_id")
     attending = body.get("attending")
     if not slack_id or not isinstance(attending, bool):
         return JSONResponse({"error": "slack_id and boolean attending required"}, status_code=422)
