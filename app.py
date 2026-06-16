@@ -36,9 +36,14 @@ async def internal_rsvp(req: Request):
     event = await env.database.toggle_user_interest(event_id, slack_id, forced_state=attending)
     if not event:
         return JSONResponse({"error": "event not found or update failed"}, status_code=404)
-    is_attending = slack_id in (event.get("InterestedUsers") or [])
-    return JSONResponse({"attending": is_attending, "InterestCount": event.get("InterestCount", 0)})
-
+    if isinstance(event, dict):
+        interested = event.get("InterestedUsers") or []
+        count = event.get("InterestCount", 0)
+    else:
+        interested = event.InterestedUsers or []
+        count = event.InterestCount or 0
+    is_attending = slack_id in interested
+    return JSONResponse({ "attending": is_attending, "InterestCount": count })
 async def internal_rsvp_list(req: Request):
     if not _check_internal_secret(req):
         return JSONResponse({"error": "unauthorized"}, status_code=401)
