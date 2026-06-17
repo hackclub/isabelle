@@ -1,12 +1,11 @@
 from datetime import datetime, timezone
-from typing import List, Optional, Dict
+from typing import List, Optional, Dict, Any
 import uuid
 import json
 import logging
 from urllib.parse import quote
 
 from isabelle.tables import Event
-
 
 def get_cachet_pfp(user_id: str) -> str:
     return f"https://cachet.dunkirk.sh/users/{user_id}/r"
@@ -45,6 +44,7 @@ class DatabaseService:
             Avatar=avatar_url or get_cachet_pfp(leader_slack_id),
             EventLink=event_link or "https://app.slack.com/huddle/T0266FRGM/C01D7AHKMPF",
             Approved=approved,
+            RSVPData = {},
             Cancelled=False,
             InterestedUsers=[],
             InterestCount=0,
@@ -71,7 +71,7 @@ class DatabaseService:
     async def get_event(self, event_id: str) -> Optional[Event]:
         try:
             event_uuid = uuid.UUID(event_id)
-            return await Event.select().where(Event.id == event_uuid).first()
+            return await Event.select().where(Event.id == event_uuid).output(load_json=True).first()
         except (ValueError, TypeError):
             return None
     
@@ -81,7 +81,7 @@ class DatabaseService:
         if not include_unapproved:
             query = query.where(Event.Approved == True)
             
-        return await query.order_by(Event.StartTime)
+        return await query.order_by(Event.StartTime).output(load_json=True)
     
     async def get_upcoming_events(self, include_unapproved: bool = False) -> List[Event]:
         now = datetime.now()
@@ -93,7 +93,7 @@ class DatabaseService:
         if not include_unapproved:
             query = query.where(Event.Approved == True)
             
-        return await query.order_by(Event.StartTime)
+        return await query.order_by(Event.StartTime).output(load_json=True)
     
     
     async def update_event(self, event_id: str, **updates) -> Optional[Event]:
@@ -118,7 +118,7 @@ class DatabaseService:
         try:
             event_uuid = uuid.UUID(event_id) 
             await Event.update(**updates).where(Event.id == event_uuid)
-            return await Event.select().where(Event.id == event_uuid).first()
+            return await Event.select().where(Event.id == event_uuid).output(load_json=True).first()
         except (ValueError, TypeError) as e:
             logging.error(e)
             return None
@@ -132,50 +132,90 @@ class DatabaseService:
             updates["RawCancellation"] = reason
         return await self.update_event(event_id, **updates)
     
-    async def toggle_user_interest(self, event_id: str, user_slack_id: str, forced_state: Optional[bool] = None) -> Optional[Event]:
+    async def toggle_user_interest(self, event_id: str, user_slack_id: str, forced_state: Optional[bool] = None, user_info: Optional[Dict[str, Any]] = None) -> Optional[Event]:
         try:
             event_uuid = uuid.UUID(event_id)
-            event = await Event.objects().where(Event.id == event_uuid).first()
+            event = await Event.objects().where(Event.id == event_uuid).output(load_json=True).first()
             
             if not event:
                 return None
-                
-            interested_users = list(event.InterestedUsers or [])
-            unupdated_users_set = set(interested_users)
             
+            rsvp_data = dict(event.RSVPData or {})
+            if isinstance(rsvp_data, str):
+                try:
+                    import json
+                    rsvp_data = json.loads(rsvp_data)
+                except Exception:
+                    rsvp_data = {}
+            legacy_users: list = list(event.InterestedUsers or [])
+
+            sub = user_info.get("sub") if user_info else None
+            rsvp_key = sub or user_slack_id
+
+            in_rsvp_data = rsvp_key in rsvp_data
+            in_legacy = user_slack_id in legacy_users
+            currently_attending = in_rsvp_data or in_legacy
+
             if forced_state is True:
-                if user_slack_id not in interested_users:
-                    interested_users.append(user_slack_id)
-         
+                should_attend = True
             elif forced_state is False:
-                if user_slack_id in interested_users:
-                    interested_users.remove(user_slack_id)
-            
-            elif forced_state == None:
-                if user_slack_id in interested_users:
-                    interested_users.remove(user_slack_id)
-                else:
-                    interested_users.append(user_slack_id)
+                should_attend = False
+            else:
+                should_attend = not currently_attending
 
+            if not should_attend and not currently_attending:
+                return await Event.select().where(Event.id == event_uuid).output(load_json=True).first()
 
-            if set(interested_users) == unupdated_users_set:
-                return event
+            if should_attend:
+                rsvp_data[rsvp_key] = {
+                    "sub" : sub,
+                    "slackId": user_slack_id,
+                    "name": user_info.get("name") if user_info else None,
+                    "email": user_info.get("email") if user_info else None,
+                    "slackDisplayName": user_info.get("slackDisplayName") if user_info else None,
+                    "rsvpedAt": datetime.now(timezone.utc).isoformat(),
+                }
+            else:
+                rsvp_data.pop(rsvp_key, None)
+                if user_slack_id != rsvp_key:
+                    rsvp_data.pop(user_slack_id, None)
+                stale = [k for k, v in rsvp_data.items() if v.get("slackId") == user_slack_id]
+                for k in stale:
+                    rsvp_data.pop(k)
+
+            rsvp_slack_ids = {v.get("slackId") for v in rsvp_data.values() if v.get("slackId")}
+            legacy_only = [uid for uid in legacy_users if uid not in rsvp_slack_ids]
+            new_count = len(rsvp_data) + len(legacy_only)
 
             await Event.update(
-                InterestedUsers=interested_users,
-                InterestCount=len(interested_users)
+                RSVPData=rsvp_data,
+                InterestCount=new_count,
+                # InterestedUsers - will no longer be written (exists in the backend for already RSVPed users btw)!
             ).where(Event.id == event_uuid)
-            
-            return await Event.select().where(Event.id == event_uuid).first()
-        except (ValueError, TypeError):
+            return await Event.select().where(Event.id == event_uuid).output(load_json=True).first()
+        except (ValueError, TypeError) as e:
+            logging.error("toggle_user_interest error: %s", e)
             return None
     
     async def get_interested_users(self, event_id: str) -> List[str]:
+        """legacy: returns union of slack IDs from both sources, we should remove InterestedUsers later tho"""
         event = await self.get_event(event_id)
 
         if not event:
             return []
-        return list(event.InterestedUsers or [])
+        legacy = list(event.get("InterestedUsers") or [])
+        rsvp_slack_ids = [
+            v["slackId"]
+            for v in (event.get("RSVPData") or {}).values()
+            if v.get("slackId")
+        ]
+        combined = list(legacy)
+        legacy_set = set(legacy)
+        for sid in rsvp_slack_ids:
+            if sid not in legacy_set:
+                combined.append(sid)
+
+        return combined
     
     async def set_rsvp_message(self, event_id: str, message_ts: str, channel_id: str, emoji: Optional[str] = None) -> bool:
         emoji_part = emoji or "any"
@@ -185,7 +225,7 @@ class DatabaseService:
         return result is not None
     
     async def get_event_by_rsvp(self, message_ts:str, channel_id:str, emoji: str) -> Optional[Event]:
-        event = await Event.select().where(Event.rsvpMsg == f"{message_ts}/{channel_id}/{emoji}").first()
+        event = await Event.select().where(Event.rsvpMsg == f"{message_ts}/{channel_id}/{emoji}").output(load_json=True).first()
 
         return event or None
 
