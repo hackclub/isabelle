@@ -21,6 +21,7 @@ from isabelle.events.views.rsvp_msg_set_response import handle_rsvp_msg_set_resp
 from isabelle.events.reaction_added import handle_reaction_added
 from isabelle.events.reaction_removed import handle_reaction_removed
 from isabelle.utils.env import env
+from isabelle.events.commands.create_event import handle_create_event_cmd
 from isabelle.views.app_home import get_home
 from slack_bolt.async_app import AsyncApp
 
@@ -112,3 +113,7 @@ async def edit_ama_fields_btn(ack: Callable, body: dict[str, Any], client: Async
 @app.view("edit_ama_fields")
 async def edit_ama_fields_view(ack: Callable, body: dict[str, Any], client: AsyncWebClient):
     await handle_edit_ama_fields_view(ack, body, client)
+
+@app.command("/create-event")
+async def create_event_cmd(ack: Callable, body: dict[str,Any],client: AsyncWebClient):
+    await handle_create_event_cmd(ack,body,client)

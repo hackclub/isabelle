@@ -28,14 +28,14 @@ async def get_home(user_id: str, client: AsyncWebClient):
         event
         for event in events
         if event["StartTime"]
-        > datetime.now()
+        > datetime.now(timezone.utc)
     ]
     current_events = [
         event
         for event in events
-        if datetime.now()
+        if datetime.now(timezone.utc)
         < event.get("EndTime")
-        and datetime.now()
+        and datetime.now(timezone.utc)
         > event["StartTime"]
     ]
 

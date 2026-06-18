@@ -13,14 +13,13 @@ from isabelle.utils.utils import rich_text_to_mrkdwn
 from slack_gfm import rich_text_to_gfm
 
 from isabelle.views.app_home import get_home
-from datetime import datetime
 
 
 async def handle_create_event_view(ack: Callable, body: dict[str, Any], client: AsyncWebClient):
     await ack()
     view = body["view"]
     values = view["state"]["values"]
-    title = (values["title"]["title"]["value"],)
+    title = (values["title"]["title"]["value"])
     description = values["description"]["description"]["rich_text_value"]["elements"]
     md = rich_text_to_md(description)
     start_time = datetime.fromtimestamp(values["start_time"]["start_time"]["selected_date_time"])
