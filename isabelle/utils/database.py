@@ -99,7 +99,7 @@ class DatabaseService:
         return await query.order_by(Event.StartTime)
     
     async def get_upcoming_events(self, include_unapproved: bool = False) -> List[Event]:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(timezone.utc).replace(tzinfo=None)
         query = Event.select().where(
             Event.StartTime > now,
             Event.Cancelled == False
