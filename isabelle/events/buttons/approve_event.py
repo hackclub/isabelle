@@ -1,5 +1,6 @@
 from typing import Any
 from typing import Callable
+import logging
 
 from slack_sdk.web.async_client import AsyncWebClient
 
@@ -52,5 +53,24 @@ async def handle_approve_event_btn(ack: Callable, body: dict[str, Any], client: 
         channel=event["LeaderSlackID"],
         text=f"Your event {event["Title"]} has been approved by <@{user_id}>! Please reach out to them if you have any questions or need help.",
     )
+    if env.mailer:
+        try:
+            user_info = await client.users_info(user=event["LeaderSlackID"])
+            host_email = user_info["user"]["profile"].get("email")
+            if host_email:
+                #An example
+                env.mailer.send_email(
+                    host_email,
+                    f"Your event `{event['Title']}' has been approved!",
+                    f"Hi {event['Leader']}!\n\n"
+                    f"Great news - your event `{event['Title']} has been approved by <@{user_id}>.\n"
+                    f"Start Time: {event['StartTime']}\n"
+                    f"Event Link: {event.get('EventLink','N/A')}\n\n"
+                    f"Reach out to <@{user_id}> if you have any question\n\n"
+
+                )
+        
+        except Exception:
+            logging.exception("Failed to send approval email")
 
     await client.views_publish(user_id=user_id, view=await get_home(user_id, client))

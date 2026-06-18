@@ -1,6 +1,7 @@
 import json
 from typing import Any
 from typing import Callable
+import logging
 
 from slack_sdk.web.async_client import AsyncWebClient
 
@@ -71,3 +72,16 @@ async def handle_reject_event_view(ack: Callable, body: dict[str, Any], client: 
             message,
         ],
     )
+    if env.mailer:
+        try:
+            info = await client.users_info(user=event["LeaderSlackID"])
+            email_addr = info["user"]["profile"]["email"]
+            #rejection example(modificate!!!):
+            env.mailer.send_email(
+                email_addr,
+                f"Your event {event['Title']} has been rejected",
+                f"Hey {event['Leader']} has been rejected by <@{body['user']['id']}>,\n\n"
+                f"Please reach out to them if you have any questions or need help"
+            )
+        except Exception:
+            logging.exception("Failed to send rejection email")
