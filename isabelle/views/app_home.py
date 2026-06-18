@@ -12,6 +12,7 @@ from isabelle.utils.utils import user_in_safehouse
 async def get_home(user_id: str, client: AsyncWebClient):
     sad_member = await user_in_safehouse(user_id)
     user_info = await client.users_info(user=user_id)
+    now = datetime.now(timezone.utc).replace(tzinfo=None)
     ws_admin = (
         True
         if user_info["user"]["is_admin"]
@@ -28,14 +29,14 @@ async def get_home(user_id: str, client: AsyncWebClient):
         event
         for event in events
         if event["StartTime"]
-        > datetime.now(timezone.utc)
+        > now
     ]
     current_events = [
         event
         for event in events
-        if datetime.now(timezone.utc)
+        if now
         < event.get("EndTime")
-        and datetime.now(timezone.utc)
+        and now
         > event["StartTime"]
     ]
 
