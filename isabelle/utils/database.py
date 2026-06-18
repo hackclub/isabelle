@@ -29,6 +29,21 @@ class DatabaseService:
         tags: Optional[List[str]] = None,
     ) -> Optional[Event]:
         
+        ##Checking for duplicate events
+        
+        existing = await Event.select().where(
+            Event.Title == title,
+            Event.StartTime == start_time,
+            Event.Cancelled == False
+        ).first()
+
+        if existing: 
+            logging.warning(
+            f"Duplicate event blocked: `{title} at {start_time}"
+            f"(existing ID: {existing.get('id')})"
+        )
+            return None
+        
         raw_description_json = json.dumps({
             "type": "rich_text",
             "elements": raw_description,

@@ -59,7 +59,7 @@ async def handle_create_event_view(ack: Callable, body: dict[str, Any], client: 
         await client.chat_postEphemeral(
             user=body["user"]["id"],
             channel=body["user"]["id"],
-            text=f'An error occurred whilst creating the event "{title[0]}".',
+            text=(f'Could not create "{title[0]}\n' f'An event with the same titla and start time may already exist\n' f'Please check exiting events or edit them instead')
         )
         return
 
