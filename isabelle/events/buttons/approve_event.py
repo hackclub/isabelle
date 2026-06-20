@@ -63,7 +63,7 @@ async def handle_approve_event_btn(ack: Callable, body: dict[str, Any], client: 
                     host_email,
                     f"Your event `{event['Title']}' has been approved!",
                     f"Hi {event['Leader']}!\n\n"
-                    f"Great news - your event `{event['Title']} has been approved by <@{user_id}>.\n"
+                    f"Great news - your event `{event['Title']}` has been approved by <@{user_id}>.\n"
                     f"Start Time: {event['StartTime']}\n"
                     f"Event Link: {event.get('EventLink','N/A')}\n\n"
                     f"Reach out to <@{user_id}> if you have any question\n\n"

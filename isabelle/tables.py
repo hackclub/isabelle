@@ -43,5 +43,5 @@ class Event(Table):
     InterestCount = SmallInt() # I know this could easily be calculated but I will try to keep this as close to the airtable as possible
     rsvpMsg = Text(null=True)
     Tags = Array(base_column=Text(), default=[])
-    #created_at = Timestamptz(auto_update=datetime.now,default=datetime.now)
-    #updated_at = Timestamptz(auto_update=datetime.now,default=datetime.now)
+    created_at = Timestamptz(auto_update=datetime.now,default=datetime.now)
+    updated_at = Timestamptz(auto_update=datetime.now,default=datetime.now)
