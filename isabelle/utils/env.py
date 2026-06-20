@@ -26,6 +26,10 @@ class Environment:
 
         unset = [key for key, value in self.__dict__.items() if value == "unset"]
 
+        if self.environemnt == "development":
+            unset = [key for key in unset if key not in ("airtable_api_key", "airtable_base_id")]
+
+
         if unset:
             raise ValueError(f"Missing environment variables: {', '.join(unset)}")
 
@@ -45,7 +49,8 @@ class Environment:
             "U06QST7V0J2",  # Eesha
             "U097UCZE2BB",  # Aishaani
             "U072PTA5BNG",  # Victorio
-            "U09Q8MLTE58"   # EPS
+            "U09Q8MLTE58",
+            "U09FD1E3F6C"   # EPS
         ]
 
         self.event_tags = [

@@ -10,7 +10,7 @@ async def handle_set_rsvp_msg(ack, shortcut,body, client: AsyncWebClient):
     sad_member = await user_in_safehouse(user_id)
 
     
-    if not sad_member:
+    if not sad_member and user_id not in env.authorised_users:
         await client.chat_postEphemeral(
             channel=shortcut["channel"]["id"],
             user=shortcut["user"]["id"],

@@ -159,7 +159,7 @@ class DatabaseService:
 
 
             if set(interested_users) == unupdated_users_set:
-                return event
+                return await Event.select().where(Event.id == event_uuid).first()
 
             await Event.update(
                 InterestedUsers=interested_users,
