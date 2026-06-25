@@ -24,6 +24,19 @@ async def send_reminder(
             email_addr, f"{event['Title']} Reminder!", message
         )
 
+def _slack_ids_for_event(event: dict[str, Any]) -> list[str]:
+    rsvp_data: dict = event.get("RSVPData") or {} 
+    legacy: list = event.get("InterestedUsers") or []
+    ids: list[str] = []
+    seen: set[str] = set()
+    for entry in rsvp_data.values():
+        sid = entry.get("slackId")
+        if sid and sid not in seen:
+            ids.append(sid); seen.add(sid)
+    for sid in legacy:
+        if sid and sid not in seen:
+            ids.append(sid); seen.add(sid)
+    return ids
 
 async def check_rsvps():
     logger.debug("Checking RSVPs")
@@ -33,15 +46,15 @@ async def check_rsvps():
         if not event["Approved"]:
             continue
         start_time = event["StartTime"].timestamp()
-        rsvps = event["InterestedUsers"]
+        slack_ids = _slack_ids_for_event(event)
 
         # Handle 1 day reminders
         if start_time - time.time() <= 86400 and not event.get(
             "Sent1DayReminder", False
         ):
-            for user in rsvps:
+            for user_id in slack_ids:
                 await send_reminder(
-                    user,
+                    user_id,
                     f"Hey! Just a reminder that {event['Title']} run by {event['Leader']} is tomorrow! Hope to see you there!",
                     event,
                 )
@@ -51,9 +64,9 @@ async def check_rsvps():
         elif start_time - time.time() <= 3600 and not event.get(
             "Sent1HourReminder", False
         ):
-            for user in rsvps:
+            for user_id in slack_ids:
                 await send_reminder(
-                    user,
+                    user_id,
                     f"Hey! Just a reminder that {event['Title']} run by {event['Leader']} starts in 1 hour! Hope to see you there!\nYou can join the event at {event.get('EventLink', 'the Slack!')}",
                     event,
                 )
@@ -63,9 +76,9 @@ async def check_rsvps():
             "SentStartingReminder", True
         ):
             pass
-            for user in rsvps:
+            for user_id in slack_ids:
                 await send_reminder(
-                    user,
+                    user_id,
                     f"Hey! Just a reminder that {event['Title']} run by {event['Leader']} has started!\nYou can join the event at {event.get('EventLink', 'the Slack!')}\nHope you enjoy it!",
                     event,
                     email=True,

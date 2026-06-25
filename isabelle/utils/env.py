@@ -21,7 +21,8 @@ class Environment:
         self.sentry_dsn = os.environ.get("SENTRY_DSN", None)
         self.environemnt = os.environ.get("ENVIRONMENT", "development")
         self.slack_app_token = os.environ.get("SLACK_APP_TOKEN")
-
+        # for RSVPing
+        self.events_rsvp_secret = os.environ.get("EVENTS_RSVP_SECRET", "unset")
         self.port = int(os.environ.get("PORT", 3000))
 
         unset = [key for key, value in self.__dict__.items() if value == "unset"]
