@@ -54,5 +54,5 @@ async def handle_reaction_added(body, client: AsyncWebClient):
                 text='Successfully RSVPed to the event. You will receive reminders about the event.'
             )
         except Exception:
-            pass
+            logging.exception("Error sending RSVP confirmation")
     

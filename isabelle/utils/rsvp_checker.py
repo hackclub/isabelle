@@ -1,7 +1,7 @@
 import asyncio
 import logging
 import time
-from datetime import datetime
+from datetime import datetime,timezone
 from typing import Any
 
 from slack_sdk.web.async_client import AsyncWebClient
@@ -60,7 +60,7 @@ async def check_rsvps():
             await env.database.update_event(str(event["id"]), **{"Sent1HourReminder": True})
 
         elif start_time - time.time() <= 0 and not event.get(
-            "SentStartingReminder", True
+            "SentStartingReminder", False
         ):
             pass
             for user in rsvps:

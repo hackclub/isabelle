@@ -18,6 +18,46 @@ from isabelle.utils import rsvp_checker
 
 import logging
 
+import time
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.middleware import Middleware
+
+#For RateLimiting
+
+class RateLimitMiddleware(BaseHTTPMiddleware):
+    def __init__(self,app,max_requests: int=100, window_seconds: int =60 ):
+        super().__init__(app)
+        self.max_requests = max_requests
+        self.window_seconds = window_seconds
+        self._requests = {}
+    
+    async def dispatch(self,request: Request, call_next):
+        if not request.url.path.startswith("/events"):
+            return await call_next(request)
+        
+        client_ip = request.client.host if request.client else "unknown"
+        now = time.time()
+
+        if client_ip in self._requests:
+            self._requests[client_ip] = [
+                ts for ts in self._requests[client_ip]
+                if now - ts < self.window_seconds
+            ]
+        else:
+            self._requests[client_ip]=[]
+
+        #Rate Limit checking
+
+        if len(self._requests[client_ip]) >= self.max_requests:
+            return JSONResponse(
+                {"error": "Rate limit exceeded. Try again later."},
+                status_code=429
+            )
+        self._requests[client_ip].append(now)
+        return await call_next(request)
+
+
+
 
 engine = None
 
@@ -89,4 +129,5 @@ api = Starlette(
         Route("/health",endpoint=health,methods=["GET"])
     ],
     lifespan=lifespan,
+    middleware=[Middleware(RateLimitMiddleware,max_requests=100,window_seconds = 60)]
 )
