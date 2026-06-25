@@ -9,7 +9,7 @@ from starlette.staticfiles import StaticFiles
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
-from isabelle.endpoints import HomeEndpoint
+from isabelle.endpoints import HomeEndpoint,rsvp_endpoint
 from isabelle.piccolo_app import APP_CONFIG
 from isabelle.tables import Event
 from slack_bolt.adapter.starlette.async_handler import AsyncSlackRequestHandler
@@ -71,7 +71,11 @@ app_handler = AsyncSlackRequestHandler(app)
 
 
 async def endpoint(req: Request):
-    return await app_handler.handle(req)
+    try:
+        return await app_handler.handle(req)
+    except Exception as e:
+        logging.error(f"Error handling Slack request: {e}")
+        return JSONResponse({"error": str(e)},status_code=500)
 
 api = Starlette(
     routes=[
@@ -86,7 +90,8 @@ api = Starlette(
         Mount("/static/", StaticFiles(directory="static")),
         Mount("/events/", PiccoloCRUD(table=Event,read_only=True,page_size=1000)),
         Route("/slack/events",endpoint=endpoint,methods=["POST"]),
-        Route("/health",endpoint=health,methods=["GET"])
+        Route("/health",endpoint=health,methods=["GET"]),
+        Route("/api/rsvp",endpoint=rsvp_endpoint,methods=["POST"])
     ],
     lifespan=lifespan,
 )

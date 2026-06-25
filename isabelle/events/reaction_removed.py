@@ -37,7 +37,7 @@ async def handle_reaction_removed(body, client: AsyncWebClient):
         text='Error disabling RSVPing to the event. :('
         )
         return
-    if str(body["event"]["user"]) not in event.get("InterestedUsers", []):
+    if str(body["event"]["user"]) not in event.get("InterestedUsers",[]):
         try: 
             await client.chat_postEphemeral(
                 channel=body["event"]["item"]["channel"],

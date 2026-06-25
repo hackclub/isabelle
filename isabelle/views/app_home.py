@@ -137,7 +137,7 @@ async def get_home(user_id: str, client: AsyncWebClient):
                 "type": "section",
                 "text": {
                     "type": "mrkdwn",
-                    "text": f"{'*[UNAPPROVED]:* ' if not event["Approved"] else ''}*{event["Title"]}* - <@{event["LeaderSlackID"]}>\n{mrkdwn}\n*{formatted_time}*",
+                "text": f"{'*[UNAPPROVED]:* ' if not event["Approved"] else ''}*{event["Title"]}* - <@{event["LeaderSlackID"]}>\n{mrkdwn}\n*{formatted_time}*\nInterest: {event.get('InterestCount',0)}",
                 },
                 "accessory": {
                     "type": "image",

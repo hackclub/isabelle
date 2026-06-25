@@ -9,14 +9,15 @@ async def handle_rsvp_msg_set_response(ack: callable, body, view, client: AsyncW
     emoji_name = extract_emoji_name(view)
     chosen_event_id = view["state"]["values"]["chosen_event"]["event_select"]["selected_option"]["value"]
     (message_ts, channel_id) = tuple(view["private_metadata"].split("-"))
-    try:
-        await client.reactions_add(
-            channel=channel_id,
-            timestamp=message_ts,
-            name=emoji_name
-        )
-    except Exception:
-        logging.warning("Error adding reaction in handle_rsvp_msg_set_response", exc_info=True)
+    if emoji_name:
+        try:
+            await client.reactions_add(
+                channel=channel_id,
+                timestamp=message_ts,
+                name=emoji_name
+            )
+        except Exception:
+            logging.warning("Error adding reaction in handle_rsvp_msg_set_response", exc_info=True)
 
     ev = await env.database.set_rsvp_msg(chosen_event_id, message_ts, channel_id, emoji_name)
 
@@ -61,12 +62,12 @@ async def rsvp_previous_reactions(client: AsyncWebClient, message_ts: str, chann
     if not res.get("ok"):
         return
     
-    reactions: list = res.get("message").get("reactions")
 
     # Holy ternary shenanigans. I'm so sorry for this, seems like the python way
+    reactions: list = res.get("message",{}).get("reactions") or []
     reactions = [i for i in reactions if i.get("name") == reaction_name] if reaction_name else reactions
 
-    users = [user for reaction in reactions for user in reaction["users"]]
+    users = [user for reaction in reactions for user in reaction.get["users",[]]]
 
     users = set(users)
 
