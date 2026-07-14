@@ -68,6 +68,26 @@ def get_propose_event_modal(user_id: str):
             },
             {
                 "type": "input",
+                "block_id": "rsvp_form_url",
+                "element": {"type": "plain_text_input", "action_id": "rsvp_form_url"},
+                "label": {
+                    "type": "plain_text",
+                    "text": "External RSVP Link (optional)",
+                    "emoji": True,
+                },
+                "optional": True,
+            },
+            {
+                "type": "context",
+                "elements": [
+                    {
+                        "type": "mrkdwn",
+                        "text": "If set, the RSVP button on the site will redirect here instead of collecting RSVPs.",
+                    }
+                ],
+            },
+            {
+                "type": "input",
                 "block_id": "host",
                 "element": {
                     "type": "users_select",
