@@ -96,6 +96,30 @@ async def get_edit_event_modal(event_id: str):
             },
             {
                 "type": "input",
+                "block_id": "rsvp_form_url",
+                "element": {
+                    "type": "plain_text_input",
+                    "action_id": "rsvp_form_url",
+                    "initial_value": event.get("RSVPFormURL") or "",
+                },
+                "label": {
+                    "type": "plain_text",
+                    "text": "External RSVP Link (optional)",
+                    "emoji": True,
+                },
+                "optional": True,
+            },
+            {
+                "type": "context",
+                "elements": [
+                    {
+                        "type": "mrkdwn",
+                        "text": "If set, the RSVP button on the site will redirect here instead of collecting RSVPs.",
+                    }
+                ],
+            },
+            {
+                "type": "input",
                 "block_id": "tags",
                 "element": {
                     "type": "multi_static_select",

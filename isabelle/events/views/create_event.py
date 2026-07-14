@@ -30,6 +30,7 @@ async def handle_create_event_view(ack: Callable, body: dict[str, Any], client: 
         values.get("location", {}).get("location", {}).get("value")
         or "https://app.slack.com/huddle/T0266FRGM/C01D7AHKMPF"
     )
+    rsvp_form_url = values.get("rsvp_form_url", {}).get("rsvp_form_url", {}).get("value") or None
 
     user = await client.users_info(user=host_id)
     host_name = user["user"]["real_name"]
@@ -55,6 +56,7 @@ async def handle_create_event_view(ack: Callable, body: dict[str, Any], client: 
         leader_name=host_name,
         event_link=location,
         tags=tags if tags else None,
+        rsvp_form_url=rsvp_form_url,
     )
     if not event:
         await client.chat_postEphemeral(
