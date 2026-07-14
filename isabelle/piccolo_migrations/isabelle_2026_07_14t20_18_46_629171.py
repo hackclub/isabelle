@@ -1,0 +1,37 @@
+from piccolo.apps.migrations.auto.migration_manager import MigrationManager
+from piccolo.columns.column_types import Text
+from piccolo.columns.indexes import IndexMethod
+
+
+ID = "2026-07-14T20:18:46:629171"
+VERSION = "1.28.0"
+DESCRIPTION = ""
+
+
+async def forwards():
+    manager = MigrationManager(
+        migration_id=ID, app_name="isabelle", description=DESCRIPTION
+    )
+
+    manager.add_column(
+        table_class_name="Event",
+        tablename="event",
+        column_name="RSVPFormURL",
+        db_column_name="RSVPFormURL",
+        column_class_name="Text",
+        column_class=Text,
+        params={
+            "default": "",
+            "null": True,
+            "primary_key": False,
+            "unique": False,
+            "index": False,
+            "index_method": IndexMethod.btree,
+            "choices": None,
+            "db_column_name": None,
+            "secret": False,
+        },
+        schema=None,
+    )
+
+    return manager
