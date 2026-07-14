@@ -3,6 +3,7 @@ from datetime import datetime
 from datetime import timezone
 from typing import Any
 from typing import Callable
+from urllib.parse import urlparse
 
 from slack_sdk.web.async_client import AsyncWebClient
 
@@ -27,6 +28,14 @@ async def handle_edit_event_view(ack: Callable, body: dict[str, Any], client: As
         or "https://app.slack.com/huddle/T0266FRGM/C01D7AHKMPF"
     )
     rsvp_form_url = values.get("rsvp_form_url", {}).get("rsvp_form_url", {}).get("value") or None
+
+    if rsvp_form_url and (not urlparse(rsvp_form_url).scheme or not urlparse(rsvp_form_url).netloc):
+        await client.chat_postEphemeral(
+            user=body["user"]["id"],
+            channel=body["user"]["id"],
+            text='The external RSVP link must be a URL.'
+        )
+        return
 
     user = await client.users_info(user=host_id)
     host_name = user["user"]["real_name"]
@@ -79,15 +88,16 @@ async def handle_edit_event_view(ack: Callable, body: dict[str, Any], client: As
     rich_text = json.loads(raw_description_string)
     mrkdwn = rich_text_to_mrkdwn(rich_text)
     tags_str = ", ".join(t.replace("-", " ").title() for t in tags) if tags else "None"
+    rsvp_form_url_str = rsvp_form_url or "None"
     await client.chat_postMessage(
         channel=env.slack_approval_channel,
-        text=f"Event updated by <@{body['user']['id']}>!\nTitle: {title[0]}\nDescription: {mrkdwn}\nTags: {tags_str}\nStart Time: {start_time[0]}\nEnd Time: {end_time[0]}",
+        text=f"Event updated by <@{body['user']['id']}>!\nTitle: {title[0]}\nDescription: {mrkdwn}\nTags: {tags_str}\nStart Time: {start_time[0]}\nEnd Time: {end_time[0]}\nExternal RSVP Link: {rsvp_form_url_str}",
         blocks=[
             {
                 "type": "section",
                 "text": {
                     "type": "mrkdwn",
-                    "text": f"Event updated by {host_str}!\n*Title:* {title[0]}\n*Description:* {mrkdwn}\n*Tags:* {tags_str}\n*Start Time (local time):* <!date^{start_time[0]}^{{date_num}} at {{time_secs}}|{fallback_start_time}>\n*End Time (local time):* <!date^{end_time[0]}^{{date_num}} at {{time_secs}}|{fallback_end_time}>",
+                    "text": f"Event updated by {host_str}!\n*Title:* {title[0]}\n*Description:* {mrkdwn}\n*Tags:* {tags_str}\n*Start Time (local time):* <!date^{start_time[0]}^{{date_num}} at {{time_secs}}|{fallback_start_time}>\n*End Time (local time):* <!date^{end_time[0]}^{{date_num}} at {{time_secs}}|{fallback_end_time}>\n*External RSVP Link:* {rsvp_form_url_str}",
                 },
             }
         ],

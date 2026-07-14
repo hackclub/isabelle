@@ -46,6 +46,14 @@ async def handle_create_event_view(ack: Callable, body: dict[str, Any], client: 
         )
         return
 
+    if rsvp_form_url and (not urlparse(rsvp_form_url).scheme or not urlparse(rsvp_form_url).netloc):
+        await client.chat_postEphemeral(
+            user=body["user"]["id"],
+            channel=body["user"]["id"],
+            text='The external RSVP link must be a URL.'
+        )
+        return
+
     event = await env.database.create_event(
         title=title[0],
         description=md,
@@ -75,15 +83,16 @@ async def handle_create_event_view(ack: Callable, body: dict[str, Any], client: 
     rich_text = json.loads(event["RawDescription"])
     mrkdwn = rich_text_to_gfm(rich_text)
     tags_str = ", ".join(t.replace("-", " ").title() for t in tags) if tags else "None"
+    rsvp_form_url_str = rsvp_form_url or "None"
     await client.chat_postMessage(
         channel=env.slack_approval_channel,
-        text=f"New event request by <@{body['user']['id']}>!\nTitle: {title[0]}\nDescription: {mrkdwn}\nTags: {tags_str}\nStart Time: {start_time}\nEnd Time: {end_time}",
+        text=f"New event request by <@{body['user']['id']}>!\nTitle: {title[0]}\nDescription: {mrkdwn}\nTags: {tags_str}\nStart Time: {start_time}\nEnd Time: {end_time}\nExternal RSVP Link: {rsvp_form_url_str}",
         blocks=[
             {
                 "type": "section",
                 "text": {
                     "type": "mrkdwn",
-                    "text": f"New event request by {host_str}!\n*Title:* {title[0]}\n*Description:* {mrkdwn}\n*Tags:* {tags_str}\n*Start Time (local time):* <!date^{int(start_time.timestamp())}^{{date_num}} at {{time_secs}}|{fallback_start_time}>\n*End Time (local time):* <!date^{int(end_time.timestamp())}^{{date_num}} at {{time_secs}}|{fallback_end_time}>",
+                    "text": f"New event request by {host_str}!\n*Title:* {title[0]}\n*Description:* {mrkdwn}\n*Tags:* {tags_str}\n*Start Time (local time):* <!date^{int(start_time.timestamp())}^{{date_num}} at {{time_secs}}|{fallback_start_time}>\n*End Time (local time):* <!date^{int(end_time.timestamp())}^{{date_num}} at {{time_secs}}|{fallback_end_time}>\n*External RSVP Link:* {rsvp_form_url_str}",
                 },
             }
         ],

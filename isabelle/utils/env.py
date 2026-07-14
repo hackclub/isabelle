@@ -46,7 +46,8 @@ class Environment:
             "U06QST7V0J2",  # Eesha
             "U097UCZE2BB",  # Aishaani
             "U072PTA5BNG",  # Victorio
-            "U09Q8MLTE58"   # EPS
+            "U09Q8MLTE58",   # EPS
+            "U0A5PLKMB25"
         ]
 
         self.event_tags = [
