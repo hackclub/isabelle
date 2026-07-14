@@ -25,6 +25,7 @@ class Event(Table):
     AMALink = Text(null=True)
     AMAAvatar = Text(null=True) # URL
     CalendarLink = Text(null=True)
+    RSVPFormURL = Text(null=True)
     Photos = Text(null=True) # URL
     # TODO Will not implement these rn. Not being used
     # Photos
