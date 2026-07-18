@@ -37,7 +37,9 @@ async def handle_reaction_added(body, client: AsyncWebClient):
         text='Error RSVPing to the event. :('
         )
         return
-    if str(body["event"]["user"]) not in event.get("InterestedUsers", []):
+    user_id = str(body["event"]["user"])
+    is_attending = user_id in (event.get("RSVPData") or {}) or user_id in (event.get("InterestedUsers") or [])
+    if not is_attending:
         try: 
             await client.chat_postEphemeral(
                 channel=body["event"]["item"]["channel"],
