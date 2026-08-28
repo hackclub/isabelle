@@ -766,7 +766,7 @@ postgres = [
 
 [[package]]
 name = "piccolo-admin"
-version = "1.12.0"
+version = "1.14.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiofiles" },
@@ -777,14 +777,14 @@ dependencies = [
     { name = "targ" },
     { name = "uvicorn" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/d4/b4/768b1d42262c004811bae9313a0f5d0af64726d25ff89f24c7778992444e/piccolo_admin-1.12.0.tar.gz", hash = "sha256:ba817153ae6bc5c467c31bdab513bbc8f28c999f69272bd68776f307e114e170", size = 400897, upload-time = "2025-07-29T08:26:11.532Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/af/e9/b6ec4aea4cc49e0a75bd8a348dc1260b6e861c5f07feed9e0c9d5db239d6/piccolo_admin-1.14.0.tar.gz", hash = "sha256:b91260ddd8b3e62a04f4e7b5901ed73dbba1b73520f6763c5328cc4ad068540e", size = 405388, upload-time = "2026-06-19T22:01:01.801Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/c6/79/f3bedc538ba3e188fc88135e9bd7e5a04f533c125b71db72b32b9a6d699c/piccolo_admin-1.12.0-py3-none-any.whl", hash = "sha256:ae432e58e343ad73e55575b2ed2ee0e0d4c143a18503ab31f26e1565f621ed5a", size = 407466, upload-time = "2025-07-29T08:26:10.129Z" },
+    { url = "https://files.pythonhosted.org/packages/8e/f6/0c254a4b58eb83ddd30f6d978da7b9844358e1d5a49f5abfc68a5dfd2f8f/piccolo_admin-1.14.0-py3-none-any.whl", hash = "sha256:994654a63197c827ca25b0e22c400be8c9f9e33e4b746f39206643d7f594a6bf", size = 411948, upload-time = "2026-06-19T22:01:00.127Z" },
 ]
 
 [[package]]
 name = "piccolo-api"
-version = "1.7.0"
+version = "1.10.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "fastapi" },
@@ -795,9 +795,9 @@ dependencies = [
     { name = "pyjwt" },
     { name = "python-multipart" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/40/7e/2800af1cd93f1565548a4d915f35ad54cfc347fa9489800610a68fb6bae1/piccolo_api-1.7.0.tar.gz", hash = "sha256:409d8f2c481afe209128fe2f3f46d8d7f147cee83b51980c022b322a1428c24c", size = 66656, upload-time = "2025-07-29T08:36:32.768Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/23/7b/4b9aa87cf77d2fea2f7d61ed052fd6b779718f51aa8021f20523bb8512fa/piccolo_api-1.10.0.tar.gz", hash = "sha256:04bb89511c29a78e3cdbc2c741fd9f07688397fe3b9263fd706338fdd81e6c1e", size = 67159, upload-time = "2026-06-19T21:50:40.434Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/41/57/b347b7b33a192a05fa542ec3fd3a1cf44ddb4a6c19126f3385484200d5ae/piccolo_api-1.7.0-py3-none-any.whl", hash = "sha256:29b17ed1ad0a320eeae97a3a56fe71ec490eddb7f97b831a949a6399f0929108", size = 89494, upload-time = "2025-07-29T08:36:31.264Z" },
+    { url = "https://files.pythonhosted.org/packages/fd/9e/bdce468e9aa792bd0b082bb1e334accf0838a752edcdcec3e20b72443b98/piccolo_api-1.10.0-py3-none-any.whl", hash = "sha256:20faa1f823b0be75d0649d01c586277b71d87ca5f5f050226014a2429d01e601", size = 90214, upload-time = "2026-06-19T21:50:39.256Z" },
 ]
 
 [[package]]
