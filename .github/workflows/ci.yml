@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      ENVIRONMENT: test
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_HOST: localhost
+      POSTGRES_PORT: 5432
+      SLACK_BOT_TOKEN: xoxb-test
+      SLACK_SIGNING_SECRET: test-signing-secret
+      SLACK_APPROVAL_CHANNEL: C0TESTAPPROVAL
+      SLACK_SAD_CHANNEL: C0TESTSAD
+      AIRTABLE_API_KEY: unused
+      AIRTABLE_BASE_ID: unused
+      EVENTS_RSVP_SECRET: test-rsvp-secret
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      - name: Apply migrations
+        run: |
+          uv run piccolo migrations forwards isabelle
+          uv run piccolo migrations forwards session_auth
+          uv run piccolo migrations forwards user
+
+      - name: Run tests
+        run: uv run pytest -v

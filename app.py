@@ -132,7 +132,8 @@ async def health(req: Request):
 @asynccontextmanager
 async def lifespan(app: Starlette):
     await open_database_connection_pool()
-    rsvp_checker.init()
+    if not env.testing:
+        rsvp_checker.init()
     yield
     await close_database_connection_pool()
 
