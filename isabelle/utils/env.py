@@ -20,6 +20,7 @@ class Environment:
         # google_password = os.environ.get("GOOGLE_PASSWORD", "unset")
         self.sentry_dsn = os.environ.get("SENTRY_DSN", None)
         self.environemnt = os.environ.get("ENVIRONMENT", "development")
+        self.testing = self.environemnt == "test"
         self.slack_app_token = os.environ.get("SLACK_APP_TOKEN")
         # for RSVPing
         self.events_rsvp_secret = os.environ.get("EVENTS_RSVP_SECRET", "unset")
