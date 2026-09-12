@@ -50,6 +50,12 @@ class Environment:
             "U09Q8MLTE58"   # EPS
         ]
 
+        self.submitter_email_domains = [
+            d.strip().lower()
+            for d in os.environ.get("SUBMITTER_EMAIL_DOMAINS", "hackclub.com").split(",")
+            if d.strip()
+        ]
+
         self.event_tags = [
             "stardance",
             "ama",
