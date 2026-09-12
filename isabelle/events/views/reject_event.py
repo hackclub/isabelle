@@ -1,4 +1,3 @@
-import json
 from typing import Any
 from typing import Callable
 
@@ -31,8 +30,11 @@ async def handle_reject_event_view(ack: Callable, body: dict[str, Any], client: 
         )
         return
 
-    event = await env.database.update_event(
-        event_id, **{"Cancelled": True, "RawCancellation": json.dumps(message), "Approved": False}
+    was_approved = bool(event.get("Approved"))
+    event = await env.database.cancel_event(
+        event_id,
+        reason=message.get("elements") if isinstance(message, dict) else message,
+        kind="cancelled" if was_approved else "rejected",
     )
 
     tags_str = ", ".join(t.replace("-", " ").title() for t in (event.get("Tags") or [])) if event.get("Tags") else "None"

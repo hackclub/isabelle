@@ -6,6 +6,7 @@ import logging
 from urllib.parse import quote
 
 from isabelle.tables import Event
+from isabelle.utils.rich_text import to_rich_text_column
 
 def get_cachet_pfp(user_id: str) -> str:
     return f"https://cachet.dunkirk.sh/users/{user_id}/r"
@@ -98,13 +99,35 @@ class DatabaseService:
         return await query.order_by(Event.StartTime).output(load_json=True)
     
     
+    CALENDAR_FIELDS = {
+        "Title",
+        "Description",
+        "Leader",
+        "EventLink",
+        "StartTime",
+        "EndTime",
+    }
+
+    async def get_reminder_candidates(self) -> List[Event]:
+        now = datetime.now(timezone.utc).replace(tzinfo=None)
+        return await (
+            Event.select()
+            .where(
+                Event.Approved == True,
+                Event.Cancelled == False,
+                Event.EndTime >= now,
+            )
+            .order_by(Event.StartTime)
+            .output(load_json=True)
+        )
+
     async def update_event(self, event_id: str, **updates) -> Optional[Event]:
 
-        if updates.get("StartTime") or updates.get("EndTime"):
+        if self.CALENDAR_FIELDS & updates.keys():
             event = await self.get_event(event_id)
             if not event:
                 return None
-            
+
             start_time = updates.get("StartTime", event.get("StartTime"))
             end_time = updates.get("EndTime", event.get("EndTime"))
             updates["CalendarLink"] = make_google_calendar_url(
@@ -115,6 +138,10 @@ class DatabaseService:
                 start=start_time,
                 end=end_time
             )
+
+            if "Title" in updates:
+                title = updates["Title"] or ""
+                updates["Calculation"] = title.lower().replace(" ", "-").replace(":", "")
 
 
         try:
@@ -128,10 +155,19 @@ class DatabaseService:
     async def approve_event(self, event_id: str) -> Optional[Event]:
         return await self.update_event(event_id, Approved=True)
     
-    async def cancel_event(self, event_id: str, reason: Optional[str] = None) -> Optional[Event]:
-        updates = {"Cancelled": True}
+    async def cancel_event(
+        self,
+        event_id: str,
+        reason=None,
+        kind: str = "cancelled",
+    ) -> Optional[Event]:
+        updates = {
+            "Cancelled": True,
+            "Approved": False,
+            "CancellationType": kind,
+        }
         if reason:
-            updates["RawCancellation"] = reason
+            updates["RawCancellation"] = to_rich_text_column(reason)
         return await self.update_event(event_id, **updates)
     
     async def toggle_user_interest(self, event_id: str, user_slack_id: str, forced_state: Optional[bool] = None, user_info: Optional[Dict[str, Any]] = None) -> Optional[Event]:
