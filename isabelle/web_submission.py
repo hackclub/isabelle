@@ -11,6 +11,7 @@ existing reader working and round-trips back through rich_text_to_md unchanged.
 The tradeoff is that markdown syntax shows literally inside Slack.
 """
 
+import re
 from datetime import datetime
 from datetime import timezone
 
@@ -19,6 +20,16 @@ DEFAULT_EVENT_LINK = "https://app.slack.com/huddle/T0266FRGM/C01D7AHKMPF"
 MAX_TITLE = 120
 MAX_DESCRIPTION = 4000
 MAX_DURATION = 24 * 60 * 60
+MAX_TAGS = 6
+MAX_TAG_LENGTH = 24
+
+
+def normalise_tag(value) -> str:
+    slug = str(value or "").strip().lower()
+    slug = re.sub(r"\s+", "-", slug)
+    slug = re.sub(r"[^a-z0-9-]", "", slug)
+    slug = re.sub(r"-{2,}", "-", slug).strip("-")
+    return slug[:MAX_TAG_LENGTH]
 
 
 def as_rich_text(description: str) -> list[dict]:
@@ -89,11 +100,12 @@ def validate(body: dict, allowed_tags: list[str]) -> tuple[dict, dict]:
             errors[field] = f"{field} must be an https:// URL"
 
     raw_tags = body.get("tags")
-    tags = (
-        [t for t in raw_tags if t in allowed_tags]
-        if isinstance(raw_tags, list)
-        else []
-    )
+    tags: list[str] = []
+    if isinstance(raw_tags, list):
+        for raw in raw_tags:
+            tag = normalise_tag(raw)
+            if tag and tag not in tags and len(tags) < MAX_TAGS:
+                tags.append(tag)
 
     return errors, {
         "title": title,
