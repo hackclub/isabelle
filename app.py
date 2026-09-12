@@ -1,4 +1,5 @@
 from contextlib import asynccontextmanager
+from datetime import timezone
 
 from piccolo.engine import engine_finder
 from piccolo_admin.endpoints import create_admin
@@ -18,6 +19,11 @@ from isabelle.utils import rsvp_checker
 import logging
 import secrets
 from isabelle.utils.env import env
+from isabelle.web_submission import as_rich_text, validate
+from isabelle import internal_events
+from isabelle.internal_events import MAX_PENDING_PER_SUBMITTER
+from isabelle.internal_events import may_submit
+from isabelle.internal_events import pending_submission_count
 
 def _check_internal_secret(req: Request) -> bool:
     provided = req.headers.get("x-internal-secret", "")
@@ -66,6 +72,108 @@ async def internal_rsvp(req: Request):
     )
     is_attending = in_rsvp or (slack_id in legacy_users)
     return JSONResponse({ "attending": is_attending, "InterestCount": count })
+async def internal_create_event(req: Request):
+    if not _check_internal_secret(req):
+        return JSONResponse({"error": "unauthorized"}, status_code=401)
+
+    try:
+        body = await req.json()
+    except Exception:
+        return JSONResponse({"error": "invalid json"}, status_code=400)
+
+    errors, values = validate(body, env.event_tags)
+    if errors:
+        return JSONResponse(
+            {"error": "invalid submission", "errors": errors}, status_code=422
+        )
+
+    submitted_by = body.get("submitted_by") or {}
+
+    if not await may_submit(submitted_by.get("email"), values["leader_slack_id"]):
+        return JSONResponse(
+            {"error": "you are not able to submit events yet"}, status_code=403
+        )
+
+    if await pending_submission_count(values["leader_slack_id"]) >= MAX_PENDING_PER_SUBMITTER:
+        return JSONResponse(
+            {
+                "error": (
+                    f"you already have {MAX_PENDING_PER_SUBMITTER} events waiting "
+                    "to be reviewed"
+                )
+            },
+            status_code=429,
+        )
+
+    leader_name = submitted_by.get("name")
+    try:
+        slack_user = await app._async_client.users_info(user=values["leader_slack_id"])
+        profile = slack_user["user"]["profile"]
+        leader_name = (
+            profile.get("real_name") or profile.get("display_name") or leader_name
+        )
+    except Exception as e:
+        logging.warning(
+            "Could not resolve Slack name for %s: %s", values["leader_slack_id"], e
+        )
+    leader_name = leader_name or values["leader_slack_id"]
+
+    event = await env.database.create_event(
+        title=values["title"],
+        description=values["description"],
+        raw_description=as_rich_text(values["description"]),
+        start_time=values["start_time"],
+        end_time=values["end_time"],
+        leader_slack_id=values["leader_slack_id"],
+        leader_name=leader_name,
+        event_link=values["event_link"],
+        tags=values["tags"] or None,
+        rsvp_form_url=values["rsvp_form_url"],
+    )
+
+    if not event:
+        return JSONResponse({"error": "could not create event"}, status_code=500)
+
+    # Best effort: the event is already stored, so a Slack outage must not turn
+    # a successful submission into an error the submitter sees.
+    try:
+        tags_str = (
+            ", ".join(t.replace("-", " ").title() for t in values["tags"])
+            if values["tags"]
+            else "None"
+        )
+        start_ts = int(values["start_time"].replace(tzinfo=timezone.utc).timestamp())
+        end_ts = int(values["end_time"].replace(tzinfo=timezone.utc).timestamp())
+        lines = [
+            f"New event submitted from the website by <@{values['leader_slack_id']}>!",
+            f"*Title:* {values['title']}",
+            f"*Description:* {values['description']}",
+            f"*Tags:* {tags_str}",
+            f"*Start Time (local time):* <!date^{start_ts}^{{date_num}} at {{time_secs}}|{values['start_time'].isoformat()}>",
+            f"*End Time (local time):* <!date^{end_ts}^{{date_num}} at {{time_secs}}|{values['end_time'].isoformat()}>",
+            f"*External RSVP Link:* {values['rsvp_form_url'] or 'None'}",
+        ]
+        message = "\n".join(lines)
+        await app._async_client.chat_postMessage(
+            channel=env.slack_approval_channel,
+            text=message,
+            blocks=[
+                {
+                    "type": "section",
+                    "text": {"type": "mrkdwn", "text": message},
+                }
+            ],
+        )
+    except Exception:
+        logging.exception(
+            "Could not post approval request for %s", values["title"]
+        )
+
+    return JSONResponse(
+        {"id": str(getattr(event, "id", "")), "approved": False}, status_code=201
+    )
+
+
 async def internal_rsvp_list(req: Request):
     if not _check_internal_secret(req):
         return JSONResponse({"error": "unauthorized"}, status_code=401)
@@ -158,6 +266,8 @@ api = Starlette(
         Mount("/events/", PiccoloCRUD(table=Event,read_only=True,page_size=1000)),
         Route("/slack/events",endpoint=endpoint,methods=["POST"]),
         Route("/health",endpoint=health,methods=["GET"]),
+        Route("/internal/events", endpoint=internal_create_event, methods=["POST"]),
+        *internal_events.routes,
         Route("/internal/events/{event_id}/rsvp", endpoint=internal_rsvp, methods=["PUT"]),
         Route("/internal/events/{event_id}/rsvps", endpoint=internal_rsvp_list, methods=["GET"]),
     ],
