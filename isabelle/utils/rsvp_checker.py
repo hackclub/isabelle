@@ -1,10 +1,13 @@
 import asyncio
 import logging
-import time
-from datetime import datetime
 from typing import Any
 
 from slack_sdk.web.async_client import AsyncWebClient
+
+from isabelle.reminders import due_reminder
+from isabelle.reminders import flags_to_set
+from isabelle.reminders import message_for
+from isabelle.reminders import utc_now
 
 from .env import env
 
@@ -40,50 +43,25 @@ def _slack_ids_for_event(event: dict[str, Any]) -> list[str]:
 
 async def check_rsvps():
     logger.debug("Checking RSVPs")
-    events = await env.database.get_upcoming_events()
+    now = utc_now()
+    events = await env.database.get_reminder_candidates()
 
     for event in events:
-        if not event["Approved"]:
+        kind = due_reminder(event, now)
+        if not kind:
             continue
-        start_time = event["StartTime"].timestamp()
-        slack_ids = _slack_ids_for_event(event)
 
-        # Handle 1 day reminders
-        if start_time - time.time() <= 86400 and not event.get(
-            "Sent1DayReminder", False
-        ):
-            for user_id in slack_ids:
-                await send_reminder(
-                    user_id,
-                    f"Hey! Just a reminder that {event['Title']} run by {event['Leader']} is tomorrow! Hope to see you there!",
-                    event,
-                )
-            await env.database.update_event(str(event["id"]), **{"Sent1DayReminder": True})
+        message = message_for(kind, event)
 
-        # Handle 1 hour reminders
-        elif start_time - time.time() <= 3600 and not event.get(
-            "Sent1HourReminder", False
-        ):
-            for user_id in slack_ids:
-                await send_reminder(
-                    user_id,
-                    f"Hey! Just a reminder that {event['Title']} run by {event['Leader']} starts in 1 hour! Hope to see you there!\nYou can join the event at {event.get('EventLink', 'the Slack!')}",
-                    event,
+        for user_id in _slack_ids_for_event(event):
+            try:
+                await send_reminder(user_id, message, event)
+            except Exception:
+                logger.exception(
+                    "Could not remind %s about %s", user_id, event.get("Title")
                 )
-            await env.database.update_event(str(event["id"]), **{"Sent1HourReminder": True})
 
-        elif start_time - time.time() <= 0 and not event.get(
-            "SentStartingReminder", True
-        ):
-            pass
-            for user_id in slack_ids:
-                await send_reminder(
-                    user_id,
-                    f"Hey! Just a reminder that {event['Title']} run by {event['Leader']} has started!\nYou can join the event at {event.get('EventLink', 'the Slack!')}\nHope you enjoy it!",
-                    event,
-                    email=True,
-                )
-            await env.database.update_event(str(event["id"]), **{"SentStartingReminder": True})
+        await env.database.update_event(str(event["id"]), **flags_to_set(kind))
 
 
 async def rsvp_worker(interval_seconds = 60):
