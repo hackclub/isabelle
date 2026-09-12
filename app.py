@@ -20,6 +20,10 @@ import logging
 import secrets
 from isabelle.utils.env import env
 from isabelle.web_submission import as_rich_text, validate
+from isabelle import internal_events
+from isabelle.internal_events import MAX_PENDING_PER_SUBMITTER
+from isabelle.internal_events import may_submit
+from isabelle.internal_events import pending_submission_count
 
 def _check_internal_secret(req: Request) -> bool:
     provided = req.headers.get("x-internal-secret", "")
@@ -84,6 +88,23 @@ async def internal_create_event(req: Request):
         )
 
     submitted_by = body.get("submitted_by") or {}
+
+    if not await may_submit(submitted_by.get("email"), values["leader_slack_id"]):
+        return JSONResponse(
+            {"error": "you are not able to submit events yet"}, status_code=403
+        )
+
+    if await pending_submission_count(values["leader_slack_id"]) >= MAX_PENDING_PER_SUBMITTER:
+        return JSONResponse(
+            {
+                "error": (
+                    f"you already have {MAX_PENDING_PER_SUBMITTER} events waiting "
+                    "to be reviewed"
+                )
+            },
+            status_code=429,
+        )
+
     leader_name = submitted_by.get("name")
     try:
         slack_user = await app._async_client.users_info(user=values["leader_slack_id"])
@@ -246,6 +267,7 @@ api = Starlette(
         Route("/slack/events",endpoint=endpoint,methods=["POST"]),
         Route("/health",endpoint=health,methods=["GET"]),
         Route("/internal/events", endpoint=internal_create_event, methods=["POST"]),
+        *internal_events.routes,
         Route("/internal/events/{event_id}/rsvp", endpoint=internal_rsvp, methods=["PUT"]),
         Route("/internal/events/{event_id}/rsvps", endpoint=internal_rsvp_list, methods=["GET"]),
     ],
