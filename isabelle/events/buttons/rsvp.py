@@ -19,7 +19,8 @@ async def handle_rsvp_btn(ack: Callable, body: dict[str, Any], client: AsyncWebC
         )
         return
 
-    if str(user_id) not in event.get("InterestedUsers", []):
+    is_attending = str(user_id) in (event.get("RSVPData") or {}) or str(user_id) in (event.get("InterestedUsers") or [])
+    if not is_attending:
         await client.chat_postMessage(
             channel=user_id,
             text=f"You're no longer interested in {event["Title"]}! :(",

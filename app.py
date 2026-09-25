@@ -15,6 +15,7 @@ from isabelle.tables import Event
 from slack_bolt.adapter.starlette.async_handler import AsyncSlackRequestHandler
 from isabelle.utils.slack import app 
 from isabelle.utils import rsvp_checker
+from isabelle.utils import digest
 import logging
 import secrets
 from isabelle.utils.env import env
@@ -134,6 +135,7 @@ async def lifespan(app: Starlette):
     await open_database_connection_pool()
     if not env.testing:
         rsvp_checker.init()
+        digest.init()
     yield
     await close_database_connection_pool()
 
