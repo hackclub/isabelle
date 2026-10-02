@@ -3,7 +3,6 @@ from piccolo.columns.column_types import Array
 from piccolo.columns.column_types import Text
 from piccolo.columns.column_types import Timestamptz
 from piccolo.columns.column_types import Varchar
-from piccolo.columns.defaults.timestamptz import TimestamptzNow
 from piccolo.columns.indexes import IndexMethod
 
 
@@ -25,7 +24,7 @@ async def forwards():
         column_class_name="Timestamptz",
         column_class=Timestamptz,
         params={
-            "default": TimestamptzNow(),
+            "default": None,
             "null": True,
             "primary_key": False,
             "unique": False,

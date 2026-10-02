@@ -74,3 +74,54 @@ async def test_second_rsvp_click_confirms_uninterest(clean_events):
     dm_texts = await _click_rsvp(str(event.id), "U0CLICKER")
 
     assert any("no longer interested" in t for t in dm_texts)
+
+
+WEB_USER = {"sub": "sub-web-1", "name": "Web User", "email": "web@example.com"}
+
+
+async def test_clicking_after_a_website_rsvp_removes_it_instead_of_doubling_it(
+    clean_events,
+):
+    service = DatabaseService()
+    event = await _create_approved_event(service)
+    event_id = str(event.id)
+    await service.toggle_user_interest(
+        event_id, "U0WEBUSER", forced_state=True, user_info=WEB_USER
+    )
+
+    dm_texts = await _click_rsvp(event_id, "U0WEBUSER")
+
+    assert any("no longer interested" in t for t in dm_texts)
+    stored = await service.get_event(event_id)
+    assert stored["InterestCount"] == 0
+    assert stored["RSVPData"] == {}
+
+
+async def test_a_slack_rsvp_then_a_website_rsvp_counts_once(clean_events):
+    service = DatabaseService()
+    event = await _create_approved_event(service)
+    event_id = str(event.id)
+
+    await _click_rsvp(event_id, "U0WEBUSER")
+    await service.toggle_user_interest(
+        event_id, "U0WEBUSER", forced_state=True, user_info=WEB_USER
+    )
+
+    stored = await service.get_event(event_id)
+    assert stored["InterestCount"] == 1
+    assert list(stored["RSVPData"]) == ["sub-web-1"]
+
+
+async def test_a_forced_slack_rsvp_keeps_an_existing_website_rsvp(clean_events):
+    service = DatabaseService()
+    event = await _create_approved_event(service)
+    event_id = str(event.id)
+    await service.toggle_user_interest(
+        event_id, "U0WEBUSER", forced_state=True, user_info=WEB_USER
+    )
+
+    await service.toggle_user_interest(event_id, "U0WEBUSER", forced_state=True)
+
+    stored = await service.get_event(event_id)
+    assert stored["InterestCount"] == 1
+    assert stored["RSVPData"]["sub-web-1"]["email"] == "web@example.com"

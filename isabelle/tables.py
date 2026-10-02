@@ -55,10 +55,10 @@ class DigestState(Table):
     Key = Varchar(length=64, unique=True)
     # When a digest last actually went out. The "dailyish" frequency measures
     # channel activity from this point, so a suppressed slot must not move it.
-    LastPostedAt = Timestamptz(null=True)
+    LastPostedAt = Timestamptz(null=True, default=None)
     # When a scheduled slot was last evaluated, whether or not it posted. This
     # is what stops one slot being reconsidered every 60 seconds.
-    LastCheckedAt = Timestamptz(null=True)
+    LastCheckedAt = Timestamptz(null=True, default=None)
     # Slack ts of the last digest, used as the "count messages after this"
     # cursor for conversations.history.
     LastMessageTs = Varchar(length=32, null=True)

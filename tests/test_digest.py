@@ -384,3 +384,143 @@ class TestDailyish:
         assert await self._run(monkeypatch, self._events("evt_1")) is True
         assert self.post.await_count == 1
         self.history.assert_not_awaited()
+
+
+def _section_text(blocks):
+    return next(b for b in blocks if b["type"] == "section")["text"]["text"]
+
+
+def _rich(text):
+    return json.dumps(
+        {
+            "elements": [
+                {
+                    "type": "rich_text_section",
+                    "elements": [{"type": "text", "text": text}],
+                }
+            ]
+        }
+    )
+
+
+class TestSlackLimits:
+    def test_truncates_a_long_description(self):
+        blocks, _ = build_digest([event(RawDescription=_rich("word " * 2000))], config())
+        text = _section_text(blocks)
+        assert len(text) < 3000
+        assert "\u2026" in text
+        assert "<!date^" in text
+
+    def test_truncation_does_not_leave_half_a_link(self):
+        padding = "x" * (digest.MAX_DESCRIPTION - 5)
+        raw = _rich(f"{padding} <https://example.com/a-long-link|label>")
+        blocks, _ = build_digest([event(RawDescription=raw)], config())
+        text = _section_text(blocks)
+        assert text.count("<") == text.count(">")
+
+    def test_escapes_the_title(self):
+        blocks, _ = build_digest([event(Title="<!channel> R&D")], config())
+        text = _section_text(blocks)
+        assert "<!channel>" not in text
+        assert "&lt;!channel&gt; R&amp;D" in text
+
+    def test_the_worst_case_title_and_description_stay_under_the_limit(self):
+        raw = _rich("a" * 5000)
+        blocks, _ = build_digest(
+            [event(Title="&" * 1000, RawDescription=raw)], config()
+        )
+        assert len(_section_text(blocks)) <= 3000
+
+    def test_drops_a_calendar_link_over_the_url_limit(self):
+        link = "https://example.com/" + "a" * digest.MAX_URL
+        blocks, _ = build_digest([event(CalendarLink=link)], config())
+        actions = next(b for b in blocks if b["type"] == "actions")
+        assert [e["action_id"] for e in actions["elements"]] == ["rsvp"]
+
+    def test_keeps_a_calendar_link_at_the_url_limit(self):
+        prefix = "https://example.com/"
+        link = prefix + "a" * (digest.MAX_URL - len(prefix))
+        blocks, _ = build_digest([event(CalendarLink=link)], config())
+        actions = next(b for b in blocks if b["type"] == "actions")
+        assert [e["action_id"] for e in actions["elements"]] == ["rsvp", "add-to-gcal"]
+
+
+@pytest.mark.db
+class TestPostFailures:
+    AT = datetime(2026, 10, 2, 14, 30, tzinfo=timezone.utc)
+
+    @pytest_asyncio.fixture(autouse=True)
+    async def _failing_env(self, clean_digest_state, monkeypatch):
+        monkeypatch.setattr(env, "digest_channel", "C0TESTDIGEST")
+        monkeypatch.setattr(env, "digest_frequency", "daily")
+        monkeypatch.setattr(env, "digest_hour", 14)
+
+        digest._failures.clear()
+
+        self.post = AsyncMock(side_effect=RuntimeError("invalid_blocks"))
+        monkeypatch.setattr(digest.client, "chat_postMessage", self.post)
+
+        database = type("FakeDatabase", (), {})()
+
+        async def get_upcoming_events(include_unapproved=False):
+            return [event()]
+
+        database.get_upcoming_events = get_upcoming_events
+        monkeypatch.setattr(env, "database", database)
+
+        await digest.seed_state(self.AT - timedelta(days=2))
+        yield
+        digest._failures.clear()
+
+    async def _fail_until_given_up(self, at):
+        for _ in range(digest.MAX_POST_ATTEMPTS - 1):
+            with pytest.raises(RuntimeError):
+                await digest.maybe_post_digest(at=at)
+
+        return await digest.maybe_post_digest(at=at)
+
+    async def test_gives_up_on_the_slot_after_the_attempt_limit(self):
+        assert await self._fail_until_given_up(self.AT) is False
+        assert self.post.await_count == digest.MAX_POST_ATTEMPTS
+
+        assert await digest.maybe_post_digest(at=self.AT) is False
+        assert self.post.await_count == digest.MAX_POST_ATTEMPTS
+
+    async def test_giving_up_marks_the_slot_checked_without_moving_the_post(self):
+        before = (await digest.get_state())["last_posted_at"]
+        await self._fail_until_given_up(self.AT)
+
+        state = await digest.get_state()
+        assert state["last_checked_at"] == self.AT
+        assert state["last_posted_at"] == before
+
+    async def test_the_next_slot_gets_a_fresh_set_of_attempts(self):
+        await self._fail_until_given_up(self.AT)
+
+        with pytest.raises(RuntimeError):
+            await digest.maybe_post_digest(at=self.AT + timedelta(days=1))
+
+    async def test_a_success_clears_the_failure_count(self):
+        with pytest.raises(RuntimeError):
+            await digest.maybe_post_digest(at=self.AT)
+
+        self.post.side_effect = None
+        self.post.return_value = {"ok": True, "ts": "300.0"}
+
+        assert await digest.maybe_post_digest(at=self.AT) is True
+        assert digest._failures == {}
+
+    async def test_does_nothing_when_another_instance_holds_the_lock(self, monkeypatch):
+        monkeypatch.setattr(digest, "_claim", AsyncMock(return_value=False))
+        self.post.side_effect = None
+        self.post.return_value = {"ok": True, "ts": "300.0"}
+
+        assert await digest.maybe_post_digest(at=self.AT) is False
+        self.post.assert_not_awaited()
+
+    async def test_the_lock_is_free_again_after_a_run(self):
+        self.post.side_effect = None
+        self.post.return_value = {"ok": True, "ts": "300.0"}
+
+        assert await digest.maybe_post_digest(at=self.AT) is True
+        assert await digest._claim() is True

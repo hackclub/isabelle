@@ -3,6 +3,7 @@ from typing import Callable
 
 from slack_sdk.web.async_client import AsyncWebClient
 
+from isabelle.utils.database import is_rsvped
 from isabelle.utils.env import env
 from isabelle.views.app_home import get_home
 
@@ -19,8 +20,10 @@ async def handle_rsvp_btn(ack: Callable, body: dict[str, Any], client: AsyncWebC
         )
         return
 
-    is_attending = str(user_id) in (event.get("RSVPData") or {}) or str(user_id) in (event.get("InterestedUsers") or [])
-    if not is_attending:
+    attending = is_rsvped(
+        event.get("RSVPData"), event.get("InterestedUsers"), str(user_id)
+    )
+    if not attending:
         await client.chat_postMessage(
             channel=user_id,
             text=f"You're no longer interested in {event["Title"]}! :(",

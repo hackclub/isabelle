@@ -31,6 +31,15 @@ MAX_BLOCKS = 50
 # is the widest at 14 days — without looping forever if a config matches none.
 _MAX_LOOKBACK_DAYS = 15
 
+MAX_TITLE = 150
+MAX_DESCRIPTION = 1800
+MAX_URL = 3000
+MAX_POST_ATTEMPTS = 3
+LOCK_KEY = 7314201
+
+_failures: dict[datetime, int] = {}
+_task: Optional[asyncio.Task] = None
+
 
 @dataclass(frozen=True)
 class DigestConfig:
@@ -98,6 +107,22 @@ def _as_utc(value: datetime) -> datetime:
     return value if value.tzinfo else value.replace(tzinfo=timezone.utc)
 
 
+def _escape(text: str) -> str:
+    return text.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;")
+
+
+def _truncate(text: str, limit: int) -> str:
+    if len(text) <= limit:
+        return text
+
+    cut = text[:limit].rstrip()
+
+    if cut.rfind("<") > cut.rfind(">"):
+        cut = cut[: cut.rfind("<")].rstrip()
+
+    return f"{cut}…"
+
+
 def _event_blocks(event: dict[str, Any]) -> list[dict[str, Any]]:
     start = _as_utc(event["StartTime"])
     fallback = start.strftime("%A, %B %d at %I:%M %p")
@@ -115,10 +140,11 @@ def _event_blocks(event: dict[str, Any]) -> list[dict[str, Any]]:
         except (ValueError, KeyError, TypeError):
             logger.warning("Unparseable RawDescription on event %s", event["id"])
 
+    title = _escape(_truncate(event["Title"], MAX_TITLE))
     leader = f" - <@{event['LeaderSlackID']}>" if event.get("LeaderSlackID") else ""
-    text = f"*{event['Title']}*{leader}\n"
+    text = f"*{title}*{leader}\n"
     if description:
-        text += f"{description}\n"
+        text += f"{_truncate(description, MAX_DESCRIPTION)}\n"
     text += f"*{when}*"
 
     section: dict[str, Any] = {
@@ -145,7 +171,7 @@ def _event_blocks(event: dict[str, Any]) -> list[dict[str, Any]]:
         }
     ]
 
-    if event.get("CalendarLink"):
+    if event.get("CalendarLink") and len(event["CalendarLink"]) <= MAX_URL:
         buttons.append(
             {
                 "type": "button",
@@ -304,6 +330,13 @@ async def should_repost_unchanged(state: dict[str, Any], config: DigestConfig) -
     return messages >= config.repost_after_messages
 
 
+async def _claim() -> bool:
+    rows = await DigestState.raw(
+        "SELECT pg_try_advisory_xact_lock({}) AS locked", LOCK_KEY
+    )
+    return bool(rows and rows[0]["locked"])
+
+
 async def maybe_post_digest(at: Optional[datetime] = None, force: bool = False) -> bool:
     if not env.digest_channel:
         return False
@@ -316,6 +349,16 @@ async def maybe_post_digest(at: Optional[datetime] = None, force: bool = False) 
     if due is None:
         return False
 
+    async with DigestState._meta.db.transaction():
+        if not await _claim():
+            return False
+
+        return await _post_if_due(at, due, config, force)
+
+
+async def _post_if_due(
+    at: datetime, due: datetime, config: DigestConfig, force: bool
+) -> bool:
     state = await get_state()
 
     if not force:
@@ -345,14 +388,33 @@ async def maybe_post_digest(at: Optional[datetime] = None, force: bool = False) 
             await mark_checked(at)
             return False
 
-    blocks, text = build_digest(events, config)
+    try:
+        blocks, text = build_digest(events, config)
 
-    response = await client.chat_postMessage(
-        channel=env.digest_channel,
-        text=text,
-        blocks=blocks,
-        unfurl_links=False,
-    )
+        response = await client.chat_postMessage(
+            channel=env.digest_channel,
+            text=text,
+            blocks=blocks,
+            unfurl_links=False,
+        )
+    except Exception:
+        attempts = _failures.get(due, 0) + 1
+
+        if attempts >= MAX_POST_ATTEMPTS:
+            _failures.clear()
+            logger.exception(
+                "Giving up on the digest due %s after %d attempts",
+                due.isoformat(),
+                attempts,
+            )
+            await mark_checked(at)
+            return False
+
+        _failures.clear()
+        _failures[due] = attempts
+        raise
+
+    _failures.clear()
 
     # Written only after Slack accepts the message. A crash before this point
     # retries on the next tick, which is the safer direction to fail.
@@ -382,10 +444,18 @@ def init():
         )
 
     async def _start():
-        await seed_state()
+        while True:
+            try:
+                await seed_state()
+                break
+            except Exception:
+                logger.exception("Could not seed the digest state, retrying")
+                await asyncio.sleep(60)
+
         await digest_worker()
 
-    loop.create_task(_start())
+    global _task
+    _task = loop.create_task(_start())
     logger.info(
         "Initialized %s event digest for channel %s",
         env.digest_frequency,

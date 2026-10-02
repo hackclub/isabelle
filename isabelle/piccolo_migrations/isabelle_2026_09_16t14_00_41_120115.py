@@ -2,7 +2,6 @@ from piccolo.apps.migrations.auto.migration_manager import MigrationManager
 from piccolo.columns.column_types import Timestamptz
 from piccolo.columns.column_types import UUID
 from piccolo.columns.column_types import Varchar
-from piccolo.columns.defaults.timestamptz import TimestamptzNow
 from piccolo.columns.defaults.uuid import UUID4
 from piccolo.columns.indexes import IndexMethod
 
@@ -75,7 +74,7 @@ async def forwards():
         column_class_name="Timestamptz",
         column_class=Timestamptz,
         params={
-            "default": TimestamptzNow(),
+            "default": None,
             "null": True,
             "primary_key": False,
             "unique": False,
