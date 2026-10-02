@@ -11,6 +11,17 @@ def get_cachet_pfp(user_id: str) -> str:
     return f"https://cachet.dunkirk.sh/users/{user_id}/r"
 
 
+def is_rsvped(rsvp_data, legacy_users, slack_id) -> bool:
+    if slack_id in (legacy_users or []):
+        return True
+
+    return any(
+        key == slack_id
+        or (isinstance(entry, dict) and entry.get("slackId") == slack_id)
+        for key, entry in (rsvp_data or {}).items()
+    )
+
+
 class DatabaseService:
     
     async def create_event(
@@ -154,9 +165,9 @@ class DatabaseService:
             sub = user_info.get("sub") if user_info else None
             rsvp_key = sub or user_slack_id
 
-            in_rsvp_data = rsvp_key in rsvp_data
-            in_legacy = user_slack_id in legacy_users
-            currently_attending = in_rsvp_data or in_legacy
+            currently_attending = rsvp_key in rsvp_data or is_rsvped(
+                rsvp_data, legacy_users, user_slack_id
+            )
 
             if forced_state is True:
                 should_attend = True
@@ -169,6 +180,18 @@ class DatabaseService:
                 return await Event.select().where(Event.id == event_uuid).output(load_json=True).first()
 
             if should_attend:
+                duplicates = [
+                    key
+                    for key, entry in rsvp_data.items()
+                    if key != rsvp_key
+                    and isinstance(entry, dict)
+                    and entry.get("slackId") == user_slack_id
+                ]
+                if duplicates and not user_info:
+                    return await Event.select().where(Event.id == event_uuid).output(load_json=True).first()
+                for key in duplicates:
+                    rsvp_data.pop(key)
+
                 rsvp_data[rsvp_key] = {
                     "sub" : sub,
                     "slackId": user_slack_id,
