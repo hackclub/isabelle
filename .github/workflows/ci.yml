@@ -37,7 +37,7 @@ jobs:
       EVENTS_RSVP_SECRET: test-rsvp-secret
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: astral-sh/setup-uv@v5
         with:
