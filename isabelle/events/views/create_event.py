@@ -17,9 +17,19 @@ from datetime import datetime
 
 
 async def handle_create_event_view(ack: Callable, body: dict[str, Any], client: AsyncWebClient):
-    await ack()
     view = body["view"]
     values = view["state"]["values"]
+    if (
+        values["end_time"]["end_time"]["selected_date_time"]
+        < values["start_time"]["start_time"]["selected_date_time"]
+    ):
+        await ack(
+            response_action="errors",
+            errors={"end_time": "End time must not be before start time."},
+        )
+        return
+    await ack()
+
     title = (values["title"]["title"]["value"],)
     description = values["description"]["description"]["rich_text_value"]["elements"]
     md = rich_text_to_md(description)
